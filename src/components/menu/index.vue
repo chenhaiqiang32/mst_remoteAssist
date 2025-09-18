@@ -6,8 +6,8 @@
   import { useAppStore } from '@/store';
   import { listenerRouteChange } from '@/utils/route-listener';
   import { openWindow, regexUrl } from '@/utils';
-  import useMenuTree from './use-menu-tree';
   import { isWujie } from '@/utils/wujie';
+  import useMenuTree from './use-menu-tree';
 
   export default defineComponent({
     emit: ['collapse'],
@@ -177,6 +177,74 @@
     .arco-icon {
       &:not(.arco-icon-down) {
         font-size: 18px;
+      }
+    }
+  }
+
+  // 侧边栏选中状态样式 - 使用SUNGROW橙色
+  :deep(.arco-menu-item) {
+    &.arco-menu-selected {
+      background-color: rgba(255, 107, 53, 0.1) !important;
+      color: #ff6b35 !important;
+
+      .arco-icon {
+        color: #ff6b35 !important;
+      }
+
+      .iconfont {
+        color: #ff6b35 !important;
+      }
+
+      &::before {
+        background-color: #ff6b35 !important;
+      }
+    }
+
+    &:hover {
+      background-color: rgba(255, 107, 53, 0.05) !important;
+      color: #ff6b35 !important;
+
+      .arco-icon {
+        color: #ff6b35 !important;
+      }
+
+      .iconfont {
+        color: #ff6b35 !important;
+      }
+    }
+  }
+
+  // 子菜单选中状态
+  :deep(.arco-menu-sub-menu) {
+    .arco-menu-item {
+      &.arco-menu-selected {
+        background-color: rgba(255, 107, 53, 0.1) !important;
+        color: #ff6b35 !important;
+
+        .arco-icon {
+          color: #ff6b35 !important;
+        }
+
+        .iconfont {
+          color: #ff6b35 !important;
+        }
+
+        &::before {
+          background-color: #ff6b35 !important;
+        }
+      }
+
+      &:hover {
+        background-color: rgba(255, 107, 53, 0.05) !important;
+        color: #ff6b35 !important;
+
+        .arco-icon {
+          color: #ff6b35 !important;
+        }
+
+        .iconfont {
+          color: #ff6b35 !important;
+        }
       }
     }
   }

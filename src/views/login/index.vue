@@ -3,9 +3,9 @@
     class="container wsl-scroll"
     :style="{ backgroundImage: `url(${loginBg})` }"
   >
-    <div class="logo">
+    <!-- <div class="logo">
       <img alt="logo" :src="commonStore.platformConfig.logo" />
-    </div>
+    </div> -->
 
     <div class="content">
       <div class="content-left">

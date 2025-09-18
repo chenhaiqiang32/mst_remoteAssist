@@ -2,13 +2,13 @@
   <div class="navbar">
     <div class="left-side">
       <a-space>
-        <img alt="logo" :src="commonStore.platformConfig?.oneToOneLogo" />
-        <a-typography-title
+        <img alt="logo" src="@/assets/images/logo.png" />
+        <!-- <a-typography-title
           :style="{ margin: 0, fontSize: '18px' }"
           :heading="5"
         >
           {{ $t('platform.title') }}
-        </a-typography-title>
+        </a-typography-title> -->
         <icon-menu-fold
           v-if="!topMenu && appStore.device === 'mobile'"
           style="font-size: 22px; cursor: pointer"
@@ -410,8 +410,8 @@
     align-items: center;
     padding-left: 20px;
     img {
-      width: 33px;
-      height: 33px;
+      // width: 33px;
+      height: 32px;
     }
   }
 
