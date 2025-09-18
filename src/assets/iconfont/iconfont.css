@@ -1,0 +1,66 @@
+@font-face {
+  font-family: 'iconfont'; /* Project id 4336057 */
+  src: url('iconfont.woff2?t=1721982722989') format('woff2'),
+    url('iconfont.woff?t=1721982722989') format('woff'),
+    url('iconfont.ttf?t=1721982722989') format('truetype');
+}
+
+.iconfont {
+  font-family: 'iconfont' !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.th-im-icon-menu-message:before {
+  content: '\e60b';
+}
+
+.th-im-icon-menu-meeting:before {
+  content: '\e60c';
+}
+
+.th-im-icon-menu-record:before {
+  content: '\e609';
+}
+
+.th-im-icon-menu-address:before {
+  content: '\e60a';
+}
+
+.th-im-video:before {
+  content: '\e604';
+}
+
+.th-im-message-notif:before {
+  content: '\e605';
+}
+
+.th-im-calendar:before {
+  content: '\e606';
+}
+
+.th-im-folder-cloud:before {
+  content: '\e607';
+}
+
+.th-im-setting:before {
+  content: '\e608';
+}
+
+.th-im-xiangji:before {
+  content: '\e71d';
+}
+
+.th-im-shandian:before {
+  content: '\e705';
+}
+
+.th-im-yunwendang:before {
+  content: '\e8a5';
+}
+
+.th-im-SOP:before {
+  content: '\e8cb';
+}

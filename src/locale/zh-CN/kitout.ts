@@ -1,0 +1,20 @@
+export default {
+  'error.logout.title': '异常退出',
+  'error.logout.title1': '提示',
+  'error.logout.tips1': '服务异常,请重新登录',
+  'error.logout.tips2': '账号失效，请重新登录',
+  'error.logout.tips3':
+    '该账号已在浏览器或其他窗口中登录， 如非本人操作，请注意账号安全',
+  'error.logout.tips4': '加载数据失败,请稍后再试',
+  'error.logout.tips5': '请返回登录页重新登录',
+  'error.logout.tips6': '应用已被禁用，请联系管理员',
+  'error.logout.tip7': '抱歉，目前您暂无访问该系统权限,请主动关闭窗口',
+  'error.logout.tip8': '若您有使用需求，建议联系系统管理员开通使用权限',
+  'error.logout.tip9': '服务重新连接中...',
+  'error.logout.tip10': '服务器已断开',
+  'error.logout.tip11': '服务器连接失败!',
+  'error.logout.btn.label1': '重新登录',
+  'error.logout.btn.label2': '关闭',
+  'error.logout.btn.label3': '退出登录',
+  'error.logout.btn.label4': '重新连接',
+};

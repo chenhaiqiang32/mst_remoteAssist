@@ -1,0 +1,234 @@
+// 即时通讯信令协议 0.0.6版本
+syntax = "proto3";
+
+// 顶层协议
+message Protocol {
+  int32 type = 1; // 事件类型 @See EventType
+  string fp = 2; // 消息指纹 UUID
+  bytes event = 3; // 消息内容 @See **Event
+  int64 timestamp = 4; // 消息时间戳
+}
+
+// 客户端平台 Client
+enum Client {
+  SERVER = 0; // 服务端类型
+  IOS = 1; // IOS类型
+  ANDROID = 2; // 安卓手机类型
+  PC = 3; // PC Web浏览器
+  GLASS = 4; // AR Glass类型
+}
+
+// 协议类型 type
+enum EventType {
+  LOGIN_REQUEST = 0; // 客户端发出的登录事件 & 服务端的登录事件处理响应
+  LOGIN_SUCCEED = 1; // 登录成功
+  HEARTBEAT_PING = 2; // 客户端 与 服务端相互传递的心跳事件
+  HEARTBEAT_PONG = 3; // 客户端 与 服务端相互传递的心跳事件
+  LOGOUT_REQUEST = 4; // 客户端发出的登出事件 & 服务端的登出事件处理响应
+  LOGOUT_SUCCEED = 5; // 客户端发出的登出事件 & 服务端的登出事件处理响应
+  KICK_OUT = 6; // 客户端踢下线事件
+  ACK = 7; // 当客户端 或 服务端收到消息时, 回复给发送方的事件
+  TOKEN_EXPIRATION_DATE = 8; // Token即将过期事件 不足10分钟时开始以1分钟每次的频率通知
+  TOKEN_REFRESH = 9; // Token刷新事件 客户端使用新的token刷新登录态
+  TOKEN_REFRESHED = 10; // Token已刷新事件 服务端响应token刷新成功
+
+  CHAT_USER_ONLINE = 11; // 用户上线事件
+  CHAT_USER_OFFLINE = 12; // 用户下线事件
+  CONTACT_UPDATED = 13; // 通讯录变化事件
+
+  CHAT_GROUP_CREATED = 14; // 群组创建事件
+  CHAT_GROUP_INFO_UPDATED = 15; // 群组信息更新事件
+  CHAT_GROUP_MEMBER_INVITED = 16; // 群组成员邀请事件
+  CHAT_GROUP_MEMBER_REMOVED = 17; // 群组成员踢出事件
+  CHAT_GROUP_MEMBER_QUIT = 18; // 群成员退出事件
+  CHAT_GROUP_MASTER_CHANGED = 19; // 群主变更事件
+  CHAT_GROUP_DISBANDED = 20; // 群组解散事件
+
+  CHAT_MESSAGE_SEND = 21; // 消息发送事件
+  CHAT_MESSAGE_RECEIVED = 22; // 消息接收事件
+  CHAT_MESSAGE_READ = 23; // 客户端接受到的消息已读事件 客户端发给服务器
+}
+
+// 被踢下线的原因
+enum KickOutReason {
+  UNKNOWN = 0; // 未知原因 一般是发生了异常
+  TOKEN_INVALID = 1; // Token无效
+  TOKEN_EXPIRED = 2; // token过期
+  DUPLICATE_LOGIN = 3; // 重复登录
+  HEARTBEAT_TIMEOUT = 4; // 心跳超时
+  EVENT_TYPE_INVALID = 5; // 事件类型无效
+  EVENT_DATA_INVALID = 6; // 参数入参校验失败
+  UNAUTHORIZED_REQUEST = 7; // 未授权的事件请求, 一般是在未登录成功时发送了其他事件消息导致的
+  APP_DISABLED = 8; //此用户的APP被禁用
+}
+
+// 登录请求事件 type = 0 客户端发给服务器 LOGIN_REQUEST
+message LoginRequestEvent {
+  int64 userId = 1;
+  Client client = 2;
+  string token = 3; // 登录的token, 用于校验userId和client的有效性
+  int64 lastLoginTime = 4; // 最后一次登录时间
+}
+
+// 登录响应事件 type = 1 服务器发给客户端 LOGIN_SUCCEED
+message LoginSucceedEvent {
+  int64 lastLoginTime = 1; // 最后一次登录时间 后续用于断线重连时携带
+}
+
+// 心跳响应事件 type = 2 客户端发给服务器 HEARTBEAT_PING
+message HeartbeatPingEvent {
+}
+
+// 心跳响应事件 type = 3 服务器发给客户端 HEARTBEAT_PONG
+message HeartbeatPongEvent {
+}
+
+// 退出登录请求事件 type = 4 客户端发给服务器 LOGOUT_REQUEST
+message LogoutRequestEvent {
+}
+
+// 退出登录响应事件 type = 5 服务器发给客户端 LOGOUT_SUCCEED
+message LogoutSucceedEvent {
+}
+
+// 踢下线事件 type = 6 服务器发给客户端 KICK_OUT
+message KickOutEvent {
+  KickOutReason reason = 1; // 被踢下线的原因
+}
+
+// ACK事件 type = 7 客户端发给服务器 / 服务器发给客户端 ACK
+message AckEvent {
+  string fp = 1; // 消息指纹
+  int64 timestamp = 2; // 消息的入库时间
+}
+
+// Token即将过期事件 type = 8 服务器发给客户端 TOKEN_EXPIRATION_DATE
+message TokenExpirationDateEvent {
+}
+
+// Token刷新事件 type = 9 客户端发给服务器 TOKEN_REFRESH
+message TokenRefreshEvent {
+  string token = 1; // 新的token
+}
+
+// Token已刷新事件 type = 10 服务器发给客户端 TOKEN_REFRESHED
+message TokenRefreshedEvent {
+}
+
+// 用户上线事件 type = 11 CHAT_USER_ONLINE 服务器发给客户端
+message UserOnlineEvent {
+  int64 userId = 1; // 用户id
+  Client client = 2; // 上线客户端
+}
+
+// 用户下线事件 type = 12 CHAT_USER_OFFLINE 服务器发给客户端
+message UserOfflineEvent {
+  int64 userId = 1; // 用户id
+  Client client = 2; // 下线客户端
+}
+
+// 通讯录变更事件 type = 13 服务器发给客户端 客户端收到后, 全量同步通讯录和分组数据
+message ContactUpdatedEvent {
+}
+
+// 群组创建事件 CHAT_GROUP_CREATED = 14; 服务器发给客户端
+message GroupCreatedEvent {
+  int64 groupId = 1; // 群组id
+  string groupName = 2; // 群组名称
+  string avatarUrl = 3; // 群组头像
+  int64 masterId = 4; // 群主ID
+  repeated int64 userIds = 5; // 用户id数组
+  int64 timestamp = 6; // 发生时间戳
+}
+
+// 群组信息更新事件 CHAT_GROUP_INFO_UPDATED = 15; 服务器发给客户端
+message GroupInfoUpdatedEvent {
+  int64 groupId = 1; // 群组ID
+  string groupName = 2; // 群组名称
+  string avatarUrl = 3; // 群组头像
+  int64 updatedUserId = 4; // 更新者ID
+  int64 timestamp = 5; // 发生时间戳
+}
+
+//  CHAT_GROUP_MEMBER_INVITED = 16; // 群组成员邀请事件 服务器发给客户端
+message GroupMemberInvitedEvent {
+  int64 groupId = 1; // 群组ID
+  string groupName = 2; // 群组名称
+  string avatarUrl = 3; // 群组头像
+  int64 invitorUserId = 4; // 邀请人userId
+  repeated int64 invitedUserIds = 5; // 被邀请人userId 数组
+  int64 timestamp = 6; // 发生时间戳
+}
+
+//  CHAT_GROUP_MEMBER_REMOVED = 17; // 群组成员踢出事件 服务器发给客户端
+message GroupMemberRemovedEvent {
+  int64 groupId = 1; // 群组ID
+  int64 masterId = 2; // 群主ID
+  repeated int64 removedUserIds = 3; // 被移除的userId数组
+  int64 timestamp = 4; // 发生时间戳
+}
+
+//  CHAT_GROUP_MEMBER_QUIT = 18; // 群成员退出事件 服务器发给客户端
+message GroupMemberQuitEvent {
+  int64 groupId = 1; // 群聊ID
+  int64 quitUserId = 2; // 退出人userId
+  int64 timestamp = 3; // 发生时间戳
+}
+
+//  CHAT_GROUP_MASTER_CHANGED = 19; // 群主变更事件
+message GroupMasterChangedEvent {
+  int64 groupId = 1; // 群组ID
+  int64 oldMasterId = 2; // 旧群主ID
+  int64 newMasterId = 3; // 新群主ID
+  int64 timestamp = 4; // 发生时间戳
+}
+
+//  CHAT_GROUP_DISBANDED = 20; // 群组解散事件
+message GroupDisbandedEvent {
+  int64 groupId = 1;
+  int64 masterId = 2;
+  int64 timestamp = 3; // 发生时间戳
+}
+
+// 发送消息事件 type = 21 客户端发给服务端
+message ChatMessageSendEvent {
+  int64 recipientId = 1; // 消息接收人 userId / groupId
+  ChatType chatType = 2; // 会话类型
+  MessageType messageType = 3; // 消息类型
+  string content = 4; // 消息正文
+}
+
+// 消息接收事件 type = 22 服务端发给客户端
+message ChatMessageReceivedEvent {
+  int64 senderId = 1; // 发送人
+  int64 recipientId = 2; // 消息接收人 userId / groupId
+  ChatType chatType = 3; // 会话类型
+  MessageType messageType = 4; // 消息类型
+  string content = 5; // 消息正文
+  int64 timestamp = 6; // 消息发送时间
+}
+
+// 消息类型
+enum ChatType {
+  PRIVATE_CHAT = 0;
+  GROUP_CHAT = 1;
+}
+
+// 消息类型
+enum MessageType {
+  TEXT = 0;
+  IMAGE = 1;
+  AUDIO = 2;
+  VIDEO = 3;
+  FILE = 4;
+  SYSTEM = 5;
+}
+
+/*
+  CHAT_RECEIVED_MESSAGE_READ = 23; 客户端接受到的消息已读事件 客户端发给服务器
+  服务器发给客户端
+ */
+message ChatReceivedMessageReadEvent {
+  ChatType chatType = 1; //会话类型
+  int64 targetId = 2; // 会话ID，聊天对象ID(单聊时为对方用户ID, 群聊时为群聊ID)
+}

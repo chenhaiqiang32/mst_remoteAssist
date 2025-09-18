@@ -1,0 +1,938 @@
+// 远程协助信令协议 0.1.6 版本
+syntax = "proto3";
+option java_package = "cn.teamhelper.socket.protocol.proto";
+option java_outer_classname = "Assist";
+
+// 顶层协议
+message Protocol {
+  int32 type = 1; // 事件类型 @See EventType
+  string fp = 2; // 消息指纹 UUID
+  bytes event = 3; // 消息内容 @See **Event
+  int64 timestamp = 4; // 消息时间戳
+}
+
+// 客户端平台 Client
+enum Client {
+  SERVER = 0; // 服务端类型
+  IOS = 1; // IOS类型
+  ANDROID = 2; // 安卓手机类型
+  PC = 3; // PC Web浏览器
+  GLASS = 4; // AR Glass类型
+}
+
+// 协议类型 type
+enum EventType {
+  LOGIN_REQUEST = 0; // 客户端发出的登录事件 & 服务端的登录事件处理响应
+  LOGIN_SUCCEED = 1; // 登录成功
+  HEARTBEAT_PING = 2; // 客户端 与 服务端相互传递的心跳事件
+  HEARTBEAT_PONG = 3; // 客户端 与 服务端相互传递的心跳事件
+  LOGOUT_REQUEST = 4; // 客户端发出的登出事件 & 服务端的登出事件处理响应
+  LOGOUT_SUCCEED = 5; // 客户端发出的登出事件 & 服务端的登出事件处理响应
+  KICK_OUT = 6; // 客户端踢下线事件
+  ACK = 7; // 当客户端 或 服务端收到消息时, 回复给发送方的事件
+  TOKEN_EXPIRATION_DATE = 8; // Token即将过期事件 不足10分钟时开始以1分钟每次的频率通知
+  TOKEN_REFRESH = 9; // Token刷新事件 客户端使用新的token刷新登录态
+  TOKEN_REFRESHED = 10; // Token已刷新事件 服务端响应token刷新成功
+
+  ASSIST_INVITE = 11; // 协助邀请事件 客户端发给服务端
+  ASSIST_INVITED = 12; // 被邀请协助事件 服务端发给客户端
+
+  ASSIST_INVITEE_BUSY = 13; // 被邀请者忙碌事件
+  ASSIST_INVITEE_BE_BUSY = 14; // 被邀请者忙碌事件
+
+  ASSIST_INVITEE_TIMEOUT = 15; // 被邀请者超时事件
+  ASSIST_INVITEE_BE_TIMEOUT = 16; // 被邀请者超时事件
+
+  ASSIST_INVITEE_ACCEPT = 17; // 被邀请者接受事件 客户端发服务器
+  ASSIST_INVITEE_ACCEPTED = 18; // 被邀请者接受事件 服务端发客户端
+
+  ASSIST_INVITEE_REJECT = 19; // 被邀请者拒绝事件
+  ASSIST_INVITEE_REJECTED = 20; // 被邀请者拒绝事件
+
+  ASSIST_CLOSED = 21; // 协助结束事件
+
+  ASSIST_SHARE_SCREEN_OPEN = 22; // 屏幕分享开启事件
+  ASSIST_SHARE_SCREEN_OPENED = 23; // 屏幕分享已开启事件
+  ASSIST_SHARE_SCREEN_CLOSE = 24; // 屏幕分享关闭事件
+  ASSIST_SHARE_SCREEN_CLOSED = 25; // 屏幕分享已结束事件
+
+  ASSIST_SCREEN_FROZEN_OPEN = 26; // 冻屏标注开启事件
+  ASSIST_SCREEN_FROZEN_OPENED = 27; // 冻屏标注已开启事件
+  ASSIST_SCREEN_FROZEN_CLOSE = 28; // 冻屏标注关闭事件
+  ASSIST_SCREEN_FROZEN_CLOSED = 29; // 冻屏标注已结束事件
+
+  ASSIST_DRAWING_BOARD_OPEN = 30; // 画板标注开启事件
+  ASSIST_DRAWING_BOARD_OPENED = 31; // 画板标注已开启事件
+  ASSIST_DRAWING_BOARD_CLOSE = 32; // 画板标注关闭事件
+  ASSIST_DRAWING_BOARD_CLOSED = 33; // 画板标注已结束事件
+
+  ASSIST_FLICKER_SCENE_OPEN = 34; // 闪点标注开启事件
+  ASSIST_FLICKER_SCENE_OPENED = 35; // 闪点标注已开启事件
+  ASSIST_FLICKER_SCENE_CLOSE = 36; // 闪点标注关闭事件
+  ASSIST_FLICKER_SCENE_CLOSED = 37; // 闪点标注已结束事件
+
+  ASSIST_MASTER_CHANGE = 38; // 主持人变更请求事件
+  ASSIST_MASTER_CHANGED = 39; // 主持人已变更事件
+
+  ASSIST_ALL_AUDIO_DISABLE = 40; // 主持人全员禁音开启, 客户端不能再开启, 主持人不受限制
+  ASSIST_ALL_AUDIO_DISABLED = 41; // 主持人全员禁音开启, 客户端不能再开启, 主持人不受限制
+  ASSIST_ALL_AUDIO_ENABLE = 42; // 主持全员禁音结束, 需要客户端自己开启
+  ASSIST_ALL_AUDIO_ENABLED = 43; // 主持全员禁音结束, 需要客户端自己开启
+
+  ASSIST_AUDIO_CLOSE = 44; // 主持人关闭指定客户端麦克风, 客户端可以自行再开启
+  ASSIST_AUDIO_CLOSED = 45; // 主持人关闭指定客户端麦克风, 客户端可以自行再开启
+  ASSIST_AUDIO_OPEN = 46; // 主持人开启指定客户端麦克风, 客户端可以自行再关闭
+  ASSIST_AUDIO_OPENED = 47; // 主持人开启指定客户端麦克风, 客户端可以自行再关闭
+
+  ASSIST_CAMERA_CLOSE = 48; // 主持人关闭指定客户端摄像头, 客户端可以自行再开启
+  ASSIST_CAMERA_CLOSED = 49; // 主持人关闭指定客户端摄像头, 客户端可以自行再开启
+  ASSIST_CAMERA_OPEN = 50; // 主持人开启指定客户端摄像头, 客户端可以自行再关闭
+  ASSIST_CAMERA_OPENED = 51; // 主持人开启指定客户端摄像头, 客户端可以自行再关闭
+
+
+  // 以下是加入CRDTs控制的类型
+  ASSIST_CHAT_MESSAGE_SEND = 52; // 聊天事件, 主要用于发送聊天消息 add(发送) delete(撤销)
+  ASSIST_CHAT_MESSAGE_RECEIVE = 53; // 聊天事件, 主要用于发送聊天消息 add(发送) delete(撤销)
+
+  ASSIST_VIDEO_TRANSFER_STRATEGY_CHANGE = 54; // 视频质量优先级改变事件 主持人客户端发给服务端
+  ASSIST_VIDEO_TRANSFER_STRATEGY_CHANGED = 55; // 视频质量优先级被改变事件 服务端发给被操作人客户端
+
+  ASSIST_CANVAS_CHANGE = 56; // 画布变化事件 add   冻屏/画板场景, 客户端收到就需更新画布缩放比例和位置信息
+  ASSIST_CANVAS_CHANGED = 57; // 画布变化事件 add   冻屏/画板场景, 客户端收到就需更新画布缩放比例和位置信息
+
+  ASSIST_CANVAS_IMAGE_CHANGE = 58; // 画布底图事件: add, delete
+  ASSIST_CANVAS_IMAGE_CHANGED = 59; // 画布底图事件: add, delete
+
+  ASSIST_CANVAS_DRAWING = 60; // 画布绘制事件 add, update, delete
+  ASSIST_CANVAS_DREW = 61; // 画布绘制事件 add, update, delete
+
+  ASSIST_CANVAS_ERASE = 62; // 画板擦除事件 add
+  ASSIST_CANVAS_ERASED = 63; // 画板擦除事件 add
+
+  ASSIST_POINT_FLICKER = 64; // 闪点标记中的点闪烁事件 add
+  ASSIST_POINT_FLICKERED = 65; // 闪点标记中的点闪烁事件 add
+
+  ASSIST_LINE_FLICKER = 66; // 闪点标记中的线闪烁事件 add
+  ASSIST_LINE_FLICKERED = 67; // 闪点标记中的线闪烁事件 add
+
+  ASSIST_WARING_FLICKER = 68; // 告警闪烁 add
+  ASSIST_WARING_FLICKERED = 69; // 告警闪烁 add
+
+  ASSIST_CAMERA_ZOOM_CHANGE = 70; // 摄像机缩放事件 add  不考虑场景, 客户端收到就需更新摄像头缩放比例
+  ASSIST_CAMERA_ZOOM_CHANGED = 71; // 摄像机缩放事件 add  不考虑场景, 客户端收到就需更新摄像头缩放比例
+
+  // 其他特殊事件
+  ASSIST_OTHER_CLIENT_JOINED = 72; // 其他客户端入会事件
+  ASSIST_STATUS_SYNC_REQUEST = 73; // 会议状态同步请求
+  ASSIST_OTHER_CLIENT_ACCEPTED = 74; // 其他客户端已同意
+  ASSIST_OTHER_CLIENT_REJECTED = 75; // 其他客户端已决绝
+  ASSIST_OTHER_CLIENT_INVITE = 76; // 切换客户端入会邀请 客户端发给服务端
+  ASSIST_OTHER_CLIENT_INVITED = 77; // 切换客户端入会邀请 服务端发给客户端
+  ASSIST_MEMBER_CLIENT_CHANGED = 78; // 会议成员客户端变更事件
+  ASSIST_MEMBER_JOINED = 79; // 成员入会事件
+  ASSIST_VIDEO_TRANSFER_STRATEGY_UPDATE = 80; // 视频质量优先级更新 更新的客户端 发给 服务端
+  ASSIST_VIDEO_TRANSFER_STRATEGY_UPDATED = 81; // 视频质量优先级更新 服务端 广播给 其他会议成员
+  ASSIST_ABOUT_TO_BEGIN = 82; // 会议即将开始事件
+  ASSIST_PLAN_STATUS_UPDATED = 83; // 会议计划状态更新
+  // 上传文件通知
+  ASSIST_UPLOAD_FILE_NOTIFY = 84;// 上传文件通知
+  ASSIST_UPLOAD_FILE_NOTIFIED = 85;// 上传文件通知
+  // 横竖屏切换通知
+  ASSIST_SCREEN_DIRECTION_UPDATE = 86; // 屏幕方向切换 客户端发给服务端
+  ASSIST_SCREEN_DIRECTION_UPDATED = 87; // 屏幕方向切换 服务端广播给其他会议成员
+
+  ASSIST_MEETING_STATUS_ASK = 88; // 会议状态问询 服务端发送客户端
+  ASSIST_MEETING_STATUS_ANSWER = 89; // 会议状态回答 服务端发送客户端
+
+  ASSIST_MEETING_REAL_TIME_TRANSLATION = 90; // 实时翻译消息 客户端发送给服务端
+
+  ASSIST_MEETING_REAL_TIME_TRANSLATIOND = 91; // 实时翻译消息 服务端发送客户端
+
+//  设置视频分辨率事件，客户端发送服务端
+  ASSIST_SET_VIDEO_RESOLUTION = 92;
+//  设置视频分辨率事件，服务端发送客户端
+  ASSIST_SET_VIDEO_RESOLUTIOND = 93;
+  // 【客户端发送服务端】 视频分辨率更新事件
+  ASSIST_VIDEO_RESOLUTION_UPDATE = 94;
+  // 【服务端发送客户端】 视频分辨率更新事件
+  ASSIST_VIDEO_RESOLUTION_UPDATED = 95;
+  // 【客户端发送服务端】会议成员设置语言
+  ASSIST_MEMBER_LANGUAGE_UPDATE = 96;
+  // 【服务端发送客户端】会议成员设置语言
+  ASSIST_MEMBER_LANGUAGE_UPDATED = 97;
+  // 【客户端发送服务端】实时翻译消息
+  ASSIST_MEETING_REAL_TIME_MESSAGE = 98;
+  // 【服务端发送客户端】实时翻译消息
+  ASSIST_MEETING_REAL_TIME_MESSAGED = 99;
+  // 【客户端发送服务端】
+  // 【服务端发送客户端】 行业变化了
+  ASSIST_MEETING_INDUSTRY_UPDATED = 100;
+  // 【客户端发送服务端】
+  // 【服务端发送客户端】
+  // 【客户端发送服务端】
+  // 【服务端发送客户端】
+
+
+}
+
+// 被踢下线的原因
+enum KickOutReason {
+  UNKNOWN = 0; // 未知原因 一般是发生了异常
+  TOKEN_INVALID = 1; // Token无效
+  TOKEN_EXPIRED = 2; // token过期
+  DUPLICATE_LOGIN = 3; // 重复登录
+  HEARTBEAT_TIMEOUT = 4; // 心跳超时
+  EVENT_TYPE_INVALID = 5; // 事件类型无效
+  EVENT_DATA_INVALID = 6; // 参数入参校验失败
+  UNAUTHORIZED_REQUEST = 7; // 未授权的事件请求, 一般是在未登录成功时发送了其他事件消息导致的
+  APP_DISABLED = 8; //此用户的APP被禁用
+}
+
+// 登录请求事件 type = 0 客户端发给服务器 LOGIN_REQUEST
+message LoginRequestEvent {
+  int64 userId = 1;
+  Client client = 2;
+  string token = 3; // 登录的token, 用于校验userId和client的有效性
+  int64 lastLoginTime = 4; // 最后一次登录时间
+}
+
+// 登录响应事件 type = 1 服务器发给客户端 LOGIN_SUCCEED
+message LoginSucceedEvent {
+  int64 lastLoginTime = 1; // 最后一次登录时间 后续用于断线重连时携带
+}
+
+// 心跳响应事件 type = 2 客户端发给服务器 HEARTBEAT_PING
+message HeartbeatPingEvent {
+  string meetingNo = 1; // 确认所在会议号
+}
+
+// 心跳响应事件 type = 3 服务器发给客户端 HEARTBEAT_PONG
+message HeartbeatPongEvent {
+  string meetingNo = 1; // 确认所在会议号
+}
+
+// 退出登录请求事件 type = 4 客户端发给服务器 LOGOUT_REQUEST
+message LogoutRequestEvent {
+}
+
+// 退出登录响应事件 type = 5 服务器发给客户端 LOGOUT_SUCCEED
+message LogoutSucceedEvent {
+}
+
+// 踢下线事件 type = 6 服务器发给客户端 KICK_OUT
+message KickOutEvent {
+  KickOutReason reason = 1; // 被踢下线的原因
+}
+
+// ACK事件 type = 7 客户端发给服务器 / 服务器发给客户端 ACK
+message AckEvent {
+  string fp = 1; // 消息指纹
+}
+
+// Token即将过期事件 type = 8 服务器发给客户端 TOKEN_EXPIRATION_DATE
+message TokenExpirationDateEvent {
+}
+
+// Token刷新事件 type = 9 客户端发给服务器 TOKEN_REFRESH
+message TokenRefreshEvent {
+  string token = 1; // 新的token
+}
+
+// Token已刷新事件 type = 10 服务器发给客户端 TOKEN_REFRESHED
+message TokenRefreshedEvent {
+}
+
+// 协助邀请事件 type = 11 发出后进入协助窗口 客户端发给服务器 ASSIST_INVITE
+message AssistInviteEvent {
+  string meetingNo = 1; // 会议号
+  repeated int64 inviters = 2; // 邀请人userId列表, 不包含邀请人自己
+  string extraPayload = 3; // 离线报文
+}
+
+// 被邀请协助事件 type = 12 接到后弹出呼叫接听窗口 服务器发给客户端 ASSIST_INVITED
+message AssistInvitedEvent {
+  string meetingNo = 1; // 会议号
+  int64 invitor = 2; // 邀请人userId
+}
+
+// 被邀请者忙碌事件 type = 13 被邀请者忙线中 客户端发给服务器 ASSIST_INVITEE_BUSY
+message AssistInviteeBusyEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitor = 2; // 邀请人userId
+}
+
+// 被邀请者忙碌事件 type = 14 被邀请者忙线中 服务器发给客户端 ASSIST_INVITEE_BE_BUSY
+message AssistInviteeBeBusyEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitee = 2; // 被邀请人userId
+}
+
+// 被邀请者超时事件 type = 15 被邀请者超时 客户端发给服务器 ASSIST_INVITEE_TIMEOUT
+message AssistInviteeTimeoutEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitor = 2; // 邀请人userId
+}
+
+// 被邀请者超时事件 type = 16 被邀请者超时 服务器发给客户端 ASSIST_INVITEE_BE_TIMEOUT
+message AssistInviteeBeTimeoutEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitee = 2; // 被邀请人userId
+}
+
+// 被邀请者接受事件 type = 17 被邀请者接受 客户端发给服务器 ASSIST_INVITEE_ACCEPT
+message AssistInviteeAcceptEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitor = 2; // 邀请人的userId
+}
+
+// 被邀请者接受事件 type = 18 被邀请者接受 服务器发给客户端 ASSIST_INVITEE_ACCEPTED
+message AssistInviteeAcceptedEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitee = 2; // 被邀请人userId
+}
+
+// 被邀请者拒绝事件 type = 19 被邀请者拒绝 客户端发给服务器 ASSIST_INVITEE_REJECT
+message AssistInviteeRejectEvent {
+  string meetingNo = 1; // 邀请的会议号
+  int64 invitor = 2; // 邀请人userId
+}
+
+// 被邀请者已拒绝事件 type = 20 被邀请者拒绝 服务器发给客户端 ASSIST_INVITEE_REJECTED
+message AssistInviteeRejectedEvent {
+  string meetingNo = 1; // 会议号
+  int64 invitee = 2; // 被邀请人userId
+}
+
+// 会议已结束事件 type = 21 会议已结束 服务器发给客户端 ASSIST_CLOSED
+message AssistClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人ID
+}
+
+// 屏幕分享开启事件 type = 22 屏幕分享开启 客户端发给服务器 ASSIST_SHARE_SCREEN_OPEN
+message AssistShareScreenOpenEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 屏幕分享已开启事件 type = 23 屏幕分享开启 服务器发给客户端 ASSIST_SHARE_SCREEN_OPENED
+message AssistShareScreenOpenedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+  Client source = 3;// 消息来源
+}
+
+// 屏幕分享关闭事件 type = 24 屏幕分享已关闭 客户端发给服务器 ASSIST_SHARE_SCREEN_CLOSE
+message AssistShareScreenCloseEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 屏幕分享已关闭事件 type = 25 屏幕分享已关闭 服务器发给客户端 ASSIST_SHARE_SCREEN_CLOSED
+message AssistShareScreenClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+}
+
+// 冻屏标注开启事件 type = 26 冻屏标注开启 客户端发给服务器 ASSIST_SCREEN_FROZEN_OPEN
+message AssistScreenFrozenOpenEvent {
+  string meetingNo = 1; // 会议号
+  int64 operator = 2; // 操作员,视频画面所属方
+  string imageUrl = 3; // 截图图片URL
+}
+
+// 冻屏标注已开启事件 type = 27 冻屏标注已开启 服务器发给客户端 ASSIST_SCREEN_FROZEN_OPENED
+message AssistScreenFrozenOpenedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+  int64 operator = 3; // 操作员,视频画面所属方
+  string imageUrl = 4; // 截图图片URL
+  Client source = 5;// 消息来源
+}
+
+// 冻屏标注关闭事件 type = 28 冻屏标注关闭 客户端发给服务器 ASSIST_SCREEN_FROZEN_CLOSE
+message AssistScreenFrozenCloseEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 冻屏标注已关闭事件 type = 29 冻屏标注已关闭 服务器发给客户端 ASSIST_SCREEN_FROZEN_CLOSED
+message AssistScreenFrozenClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+}
+
+// 画板标注开启事件 type = 30 画板标注开启 客户端发给服务器 ASSIST_DRAWING_BOARD_OPEN
+message AssistDrawingBoardOpenEvent {
+  string meetingNo = 1; // 会议号
+  int64 operator = 2; // 操作员,视频画面所属方
+}
+
+// 画板标注已开启事件 type = 31 画板标注已开启 服务器发给客户端 ASSIST_DRAWING_BOARD_OPENED
+message AssistDrawingBoardOpenedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+  int64 operator = 3; // 操作员,视频画面所属方
+  Client source = 4;// 消息来源
+}
+
+// 画板标注关闭事件 type = 32 画板标注关闭 客户端发给服务器 ASSIST_DRAWING_BOARD_CLOSE
+message AssistDrawingBoardCloseEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 画板标注已关闭事件 type = 33 画板标注已关闭 服务器发给客户端 ASSIST_DRAWING_BOARD_CLOSED
+message AssistDrawingBoardClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+}
+
+// 闪点标注开启事件 type = 34 闪点标注开启 客户端发给服务器 ASSIST_FLICKER_SCENE_OPEN
+message AssistFlickerSceneOpenEvent {
+  string meetingNo = 1; // 会议号
+  int64 operator = 2; // 操作员,视频画面所属方
+}
+
+// 闪点标注已开启事件 type = 35 闪点标注已开启 服务器发给客户端 ASSIST_FLICKER_SCENE_OPENED
+message AssistFlickerSceneOpenedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+  int64 operator = 3; // 操作员,视频画面所属方
+  Client source = 4;// 消息来源
+}
+
+// 闪点标注关闭事件 type = 36 闪点标注关闭 客户端发给服务器 ASSIST_FLICKER_SCENE_CLOSE
+message AssistFlickerSceneCloseEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 闪点标注关闭事件 type = 37 闪点标注已关闭 服务器发给客户端 ASSIST_FLICKER_SCENE_CLOSED
+message AssistFlickerSceneClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 主播ID
+}
+
+// 主持人变更事件 type = 38 主持人变更请求 客户端发给服务器 ASSIST_MASTER_CHANGE
+message AssistMasterChangeEvent {
+  string meetingNo = 1; // 会议号
+  int64 newMaster = 2; // 新主持人ID
+}
+
+// 主持人变更事件 type = 39 主持人已变更 服务器发给客户端 ASSIST_MASTER_CHANGED
+message AssistMasterChangedEvent {
+  string meetingNo = 1; // 会议号
+  int64 oldMaster = 2; // 旧主持人ID
+  int64 newMaster = 3; // 新主持人ID
+}
+
+// 全员禁音开启事件 type = 40 全员禁音 客户端发给服务器 ASSIST_ALL_AUDIO_DISABLE
+message AssistAllAudioDisableEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 全员禁音开启事件 type = 41 全员禁音 服务器发给客户端 ASSIST_ALL_AUDIO_DISABLED
+message AssistAllAudioDisabledEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人userId
+}
+
+// 全员禁音解除事件 type = 42 全员禁音 客户端发给服务器 ASSIST_ALL_AUDIO_ENABLE
+message AssistAllAudioEnableEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 全员禁音解除事件 type = 43 全员禁音 服务器发给客户端 ASSIST_ALL_AUDIO_ENABLED
+message AssistAllAudioEnabledEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人userId
+}
+
+// 关闭麦克风事件 type = 44 关闭麦克风 客户端发给服务端 ASSIST_AUDIO_CLOSE
+message AssistAudioCloseEvent {
+  string meetingNo = 1; // 会议号
+  int64 userId = 2; // 被关闭人的userId
+}
+
+// 关闭麦克风事件 type = 45 关闭麦克风 服务器发给客户端 ASSIST_AUDIO_CLOSED
+message AssistAudioClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人ID
+}
+
+// 开启麦克风事件 type = 46 开启麦克风 客户端发给服务端 ASSIST_AUDIO_OPEN
+message AssistAudioOpenEvent {
+  string meetingNo = 1; // 会议号
+  int64 userId = 2; // 被开启人的userId
+}
+
+// 开启麦克风事件 type = 47 开启麦克风 服务器发给客户端 ASSIST_AUDIO_OPENED
+message AssistAudioOpenedEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人ID
+}
+
+// 关闭摄像头事件 type = 48 关闭摄像头 客户端发给服务端 ASSIST_CAMERA_CLOSE
+message AssistCameraCloseEvent {
+  string meetingNo = 1; // 会议号
+  int64 userId = 2; // 被关闭人的userId
+}
+
+// 关闭摄像头事件 type = 49 关闭摄像头 服务器发给客户端 ASSIST_CAMERA_CLOSED
+message AssistCameraClosedEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人ID
+}
+
+// 开启摄像头事件 type = 50 开启摄像头 客户端发给服务端 ASSIST_CAMERA_OPEN
+message AssistCameraOpenEvent {
+  string meetingNo = 1; // 会议号
+  int64 userId = 2; // 被开启人的userId
+}
+
+// 开启摄像头事件 type = 51 开启摄像头 服务器发给客户端 ASSIST_CAMERA_OPENED
+message AssistCameraOpenedEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人ID
+}
+
+// 聊天消息事件 type = 52 聊天消息处理 客户端发给服务端 ASSIST_CHAT_MESSAGE_SEND
+message AssistChatMessageSendEvent {
+  string meetingNo = 1; // 会议号
+  MessageType type = 2; // 消息类型 需要定义, 比如: 文本/语音/图片/视频/文件/系统消息
+  string message = 3; // 消息内容
+}
+
+// 聊天消息事件 type = 53 聊天消息处理 服务端发给客户端 ASSIST_CHAT_MESSAGE_RECEIVE
+message AssistChatMessageReceiveEvent {
+  string meetingNo = 1; // 会议号
+  int64 sender = 2; // 发送人ID
+  MessageType type = 3; // 消息类型 需要定义, 比如: 文本/语音/图片/视频/文件/系统消息
+  string message = 4; // 消息内容
+  string fp = 5; // 消息指纹
+  int64 timestamp = 6; // 消息发送时间
+}
+
+// 消息类型
+enum MessageType {
+  TEXT = 0;  // 文本
+  PICTURE = 1; // 图片
+  AUDIO = 2; // 音频
+  VIDEO = 3; // 视频
+  FILE = 4; // 文件
+  SYSTEM = 5; // 系统消息
+}
+
+// 视频质量优先事件 type = 54 视频质量优先级改变事件 主持人客户端发给服务端 ASSIST_VIDEO_TRANSFER_STRATEGY_CHANGE
+message AssistVideoTransferStrategyChangeEvent {
+  string meetingNo = 1; // 会议号
+  int64 member = 2; // 被操作人userId
+  StrategyType type = 3; // 视频传输类型
+}
+
+// 视频质量优先事件 type = 55 视频质量优先级被改变事件 服务端发给被操作人客户端 ASSIST_VIDEO_TRANSFER_STRATEGY_CHANGED
+message AssistVideoTransferStrategyChangedEvent {
+  string meetingNo = 1; // 会议号
+  int64 master = 2; // 主持人userId
+  StrategyType type = 3; // 视频传输类型
+}
+
+// 视频传输类型
+enum StrategyType {
+  QUALITY_FIRST = 0; // 视频质量优先
+  FLUENCY_FIRST = 1; // 视频流畅度优先
+}
+
+// 画布状态变化事件 type = 56 画布状态变化 客户端发给服务端 ASSIST_CANVAS_CHANGE
+message AssistCanvasChangeEvent {
+  string meetingNo = 1; // 会议号
+  string scale = 2; // 缩放级别 最小1 最大3, 2位小数
+  string offsetX = 3; // X轴偏移量
+  string offsetY = 4; // Y轴偏移量
+  string screenWidth = 5; // 屏幕宽度
+  string screenHeight = 6; // 屏幕高度
+  int64 timestamp = 7; // 时间戳
+}
+
+// 画布状态变化事件 type = 57 画布状态变化 服务端发给客户端 ASSIST_CANVAS_CHANGED
+message AssistCanvasChangedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  string scale = 3; // 缩放级别 最小1 最大3, 2位小数
+  string offsetX = 4; // X轴偏移量
+  string offsetY = 5; // Y轴偏移量
+  string screenWidth = 6; // 屏幕宽度
+  string screenHeight = 7; // 屏幕高度
+  int64 timestamp = 8; // 时间戳
+}
+
+// 画布底图变化事件 type = 58 画布底图变化 客户端发给服务端 ASSIST_CANVAS_IMAGE_CHANGE
+message AssistCanvasImageChangeEvent {
+  string meetingNo = 1; // 会议号
+  string imageUrl = 2; // 图片地址 可能为空字符串, 代表清除底图
+  int64 timestamp = 3; // 消息发送时间戳
+}
+
+// 画布底图变化事件 type = 59 画布地图变化 服务端发给客户端 ASSIST_CANVAS_IMAGE_CHANGED
+message AssistCanvasImageChangedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  string imageUrl = 3; // 图片地址 可能为空字符串, 代表清除底图
+  int64 timestamp = 4; // 消息发送时间戳
+}
+
+// 画布绘制事件 type = 60 画布绘制 客户端发给服务端 ASSIST_CANVAS_DRAWING
+message AssistCanvasDrawingEvent {
+  string meetingNo = 1; // 会议号
+  DrawingType type = 2;
+  string uuid = 3; // 绘制的唯一标识 用于线段合并, 单操作撤销, 只有LINE操作, 会有多次相同uuid操作传递, 需要判断data是否一样
+  string color = 4; // 颜色
+  string width = 5; // 宽度
+  repeated DrawingData data = 6; // 绘制的数据
+  Action action = 7; // CRDTs 操作类型
+  string screenWidth = 8; // 屏幕宽度
+  string screenHeight = 9; // 屏幕高度
+  bool finished = 10; // 是否绘制完成
+  int64 timestamp = 11; // 绘制时间 多个线段的绘制时间戳需要相同
+}
+
+// 画布绘制事件 type = 61 画布绘制 服务端发给客户端 ASSIST_CANVAS_DREW
+message AssistCanvasDrewEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  DrawingType type = 3;
+  string uuid = 4; // 绘制的唯一标识 用于线段合并, 单操作撤销, 只有LINE操作, 会有多次相同uuid操作传递, 需要判断data是否一样
+  string color = 5; // 颜色
+  string width = 6; // 宽度
+  repeated DrawingData data = 7; // 绘制的数据
+  Action action = 8; // CRDTs 操作类型
+  string screenWidth = 9; // 屏幕宽度
+  string screenHeight = 10; // 屏幕高度
+  bool finished = 11; // 是否绘制完成
+  int64 timestamp = 12; // 绘制时间 多个线段的绘制时间戳需要相同
+}
+
+// CRDTs 操作类型
+enum Action {
+  DELETE = 0; // 撤销操作
+  ADD = 1; // 新增操作
+}
+
+// 绘制的类型
+enum DrawingType {
+  LINE = 0; // 线条
+  RECTANGLE = 1; // 矩形
+  CIRCLE = 2; // 圆
+  ARROWS = 3; // 箭头
+  POINT = 4; // 点
+}
+
+// 绘制的数据
+message DrawingData {
+  string x = 1; // 点X坐标
+  string y = 2; // 点Y坐标
+}
+
+// 画板擦除事件 type = 62 画板擦除 客户端发给服务端 ASSIST_CANVAS_ERASE
+message AssistCanvasEraseEvent {
+  string meetingNo = 1; // 会议号
+  bool clearAll = 2; // 是否清空所有, false 清空anchor绘制的, true 清空所有人的
+}
+
+// 画板擦除事件 type = 63 画板擦除 服务端发给客户端 ASSIST_CANVAS_ERASED
+message AssistCanvasErasedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  bool clearAll = 3; // 是否清空所有, false 清空anchor绘制的, true 清空所有人的
+}
+
+// 点闪烁标记事件 type = 64 客户端发给服务器 ASSIST_POINT_FLICKER
+message AssistPointFlickerEvent {
+  string meetingNo = 1; // 会议号
+  string color = 2; // 颜色值
+  string offsetX = 3; // X轴偏移量
+  string offsetY = 4; // Y轴偏移量
+  string screenWidth = 5; // 屏幕宽度
+  string screenHeight = 6; // 屏幕高度
+}
+
+// 点闪烁标记事件 type = 65 闪点 服务端发给客户端 ASSIST_POINT_FLICKERED
+message AssistPointFlickeredEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  string color = 3; // 颜色值
+  string offsetX = 4; // X轴偏移量
+  string offsetY = 5; // Y轴偏移量
+  string screenWidth = 6; // 屏幕宽度
+  string screenHeight = 7; // 屏幕高度
+}
+
+// 线条闪烁标记事件 type = 66 线条闪烁 客户端发给服务端 ASSIST_LINE_FLICKER
+message AssistLineFlickerEvent {
+  string meetingNo = 1; // 会议号
+  string uuid = 2; // 闪烁的线条唯一标识
+  string color = 3; // 颜色值
+  string width = 4; // 宽度
+  repeated DrawingData data = 5; // 线条点位数组
+  string screenWidth = 6; // 屏幕宽度
+  string screenHeight = 7; // 屏幕高度
+  bool finished = 8; // 是否绘制完成
+  int64 timestamp = 9; // 绘制时间 多个线段的绘制时间戳需要相同
+}
+
+// 线条闪烁标记事件 type = 67 线条闪烁 服务端发给客户端 ASSIST_LINE_FLICKERED
+message AssistLineFlickeredEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  string uuid = 3; // 闪烁的线条唯一标识
+  string color = 4; // 颜色值
+  string width = 5; // 宽度
+  repeated DrawingData data = 6; // 线条点位数组
+  string screenWidth = 7; // 屏幕宽度
+  string screenHeight = 8; // 屏幕高度
+  bool finished = 9; // 是否绘制完成
+  int64 timestamp = 10; // 绘制时间 多个线段的绘制时间戳需要相同
+}
+
+// 告警闪烁事件 type = 68 告警闪烁 客户端发给服务端 ASSIST_WARING_FLICKER
+message AssistWaringFlickerEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 告警闪烁事件 type = 69 告警闪烁 服务端发给客户端 ASSIST_WARING_FLICKERED
+message AssistWaringFlickeredEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+}
+
+// ASSIST_CAMERA_ZOOM_CHANGE = 70; 客户端发给服务端 摄像机缩放事件 add  不考虑场景, 客户端收到就需更新摄像头缩放比例
+message AssistCameraZoomChangeEvent {
+  string meetingNo = 1; // 会议号
+  int64 userId = 2; // 缩放人的ID
+  ZoomType type = 3; // 缩放类型
+}
+
+// ASSIST_CAMERA_ZOOM_CHANGED = 71;  服务端发给客户端 摄像机缩放事件 add  不考虑场景, 客户端收到就需更新摄像头缩放比例
+message AssistCameraZoomChangedEvent {
+  string meetingNo = 1; // 会议号
+  int64 anchor = 2; // 操作人ID
+  ZoomType type = 3; // 缩放类型
+}
+
+// 摄像头焦距缩放类型
+enum ZoomType {
+  DECREMENT = 0; // 缩小
+  INCREMENT = 1; // 放大
+}
+
+// 其他客户端入会事件 type = 72 服务端发给客户端 ASSIST_OTHER_CLIENT_JOINED
+message AssistOtherClientJoinedEvent {
+  string meetingNo = 1; // 会议号
+  Client client = 2; // 入会客户端
+}
+
+// 会议状态同步请求 type = 73 客户端在本地可以消费会议事件时发送给服务端, 服务端会响应房间状态变化事件 ASSIST_MEETING_STATUS_SYNC
+message AssistMeetingStatusSyncEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 其他客户端入会事件 type = 74 服务端发给客户端 ASSIST_OTHER_CLIENT_ACCEPTED
+message AssistOtherClientAcceptedEvent {
+  string meetingNo = 1; // 会议号
+  int64 invitor = 2; // 邀请人
+  Client client = 3; // 处理的客户端
+}
+
+// 其他客户端入会事件 type = 75 服务端发给客户端 ASSIST_OTHER_CLIENT_REJECTED
+message AssistOtherClientRejectedEvent {
+  string meetingNo = 1; // 会议号
+  int64 invitor = 2; // 邀请人
+  Client client = 3; // 处理的客户端
+}
+
+// ASSIST_OTHER_CLIENT_INVITE = 76; // 切换客户端入会邀请 客户端发给服务端
+message AssistOtherClientInviteEvent {
+  string meetingNo = 1; // 会议号
+  Client toClient = 2; // 邀请客户端
+}
+
+// ASSIST_OTHER_CLIENT_INVITED = 77; // 切换客户端入会邀请 服务端发给客户端
+message AssistOtherClientInvitedEvent {
+  string meetingNo = 1; // 会议号
+  Client fromClient = 2; // 邀请客户端
+}
+
+// ASSIST_MEMBER_CLIENT_CHANGED = 78; // 会议成员客户端变更事件
+message AssistMemberClientChangedEvent {
+  string meetingNo = 1; // 会议号
+  int64 member = 2; // 成员userId
+  Client oldClient = 3; // 原客户端
+  Client newClient = 4; // 新客户端
+}
+
+// ASSIST_MEMBER_JOINED = 79; // 成员入会事件 会议成员客户端收到后,用于更新会议成员的客户端icon
+message AssistMemberJoinedEvent {
+  string meetingNo = 1; // 会议号
+  int64 member = 2; // 成员userId
+  Client client = 3; // 客户端
+}
+
+// ASSIST_VIDEO_TRANSFER_STRATEGY_UPDATE = 80; // 视频质量优先级更新事件 更新的客户端 发给 服务器
+message AssistVideoTransferStrategyUpdateEvent {
+  string meetingNo = 1; // 会议号
+  StrategyType type = 2; // 视频传输类型
+}
+
+// ASSIST_VIDEO_TRANSFER_STRATEGY_UPDATED = 81; // 视频质量优先级已更新事件 服务端 广播发给 其他会议成员客户端
+message AssistVideoTransferStrategyUpdatedEvent {
+  string meetingNo = 1; // 会议号
+  int64 member = 2; // 会议成员userId
+  StrategyType type = 3; // 视频传输类型
+}
+
+// ASSIST_ABOUT_TO_BEGIN = 82; // 会议即将开始事件
+message AssistAboutToBeginEvent {
+  string subject = 1; // 会议主题
+  string meetingNo = 2; // 会议号
+  int64 startTime = 3; // 会议开始时间
+  int64 endTime = 4; // 会议结束时间
+  int64 master = 5; // 会议组织者userId
+}
+
+// ASSIST_PLAN_STATUS_UPDATED = 83; // 会议计划状态更新
+message AssistPlanStatusUpdatedEvent {
+  int64 planId = 1; // 会议计划ID
+  int32 planStatus = 2; // 会议计划状态 0.待开始 1.进行中 2.已结束 3.已取消
+}
+
+// ASSIST_UPLOAD_FILE_NOTIFY = 84; // 上传文件通知
+message AssistUploadFileNotifyEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// ASSIST_UPLOAD_FILE_NOTIFIED = 85; // 上传文件通知
+message AssistUploadFileNotifiedEvent {
+  string meetingNo = 1; // 会议号
+}
+
+// 屏幕方向枚举值
+enum ScreenDirection {
+  HORIZONTAL = 0; // 横屏
+  VERTICAL = 1; // 竖屏
+}
+
+// ASSIST_SCREEN_DIRECTION_UPDATE = 86; // 屏幕角度更新, 客户端发给服务端
+message AssistScreenDirectionUpdateEvent {
+  string meetingNo = 1; // 房间号
+  ScreenDirection direction = 2; // 方向枚举
+}
+
+// ASSIST_SCREEN_DIRECTION_UPDATED = 87; // 客户端屏幕角度更新, 服务端广播给会议其他成员
+message AssistScreenDirectionUpdatedEvent {
+  string meetingNo = 1; // 房间号
+  ScreenDirection direction = 2; // 方向枚举
+  int64 member = 3; // 会议成员userId
+  Client client = 4; // 会议成员客户端类型
+}
+
+// ASSIST_MEETING_STATUS_ASK = 88; // 会议状态问询
+message AssistMeetingStatusAskEvent {
+}
+
+// ASSIST_MEETING_STATUS_ANSWER = 89; // 会议状态回答
+message AssistMeetingStatusAnswerEvent {
+  string meetingNo = 1; // 房间号 不在房间号用""
+  Client client = 2; // 会议成员客户端类型
+}
+
+// ASSIST_MEETING_REAL_TIME_TRANSLATION = 90; // 实时翻译事件 客户端发送到服务端
+message AssistMeetingRealTimeTranslationEvent {
+  string meetingNo = 1; // 会议号
+  string sourceLanguage = 2; // 消息内容语言 en-US  zh-CN
+  string message = 3; // 消息内容
+}
+
+// ASSIST_MEETING_REAL_TIME_TRANSLATIOND = 91; // 实时翻译事件 服务端广播给会议其他成员
+message AssistMeetingRealTimeTranslationdEvent {
+  string meetingNo = 1; // 会议号
+  int64 sender = 2; // 发送人ID
+  string sourceLanguage = 3; // 消息内容语言 en-US  zh-CN
+  string message = 4; // 消息内容
+  int64 timestamp = 5; // 消息发送时间
+}
+// 视频分辨率
+enum VideoResolution {
+  VIDEO_RESOLUTION_360P = 0;
+  VIDEO_RESOLUTION_480P = 1;
+  VIDEO_RESOLUTION_720P = 2;
+  VIDEO_RESOLUTION_1080P = 3;
+}
+////  设置视频分辨率事件，客户端发送服务端
+//    ASSIST_SET_VIDEO_RESOLUTION = 92;
+message AssistSetVideoResolutionEvent {
+  string meetingNo = 1;
+  int64 anchor = 2; // 主播ID 被操作的视屏方
+  VideoResolution resolution = 3;
+}
+////  设置视频分辨率事件，服务端发送客户端
+//    ASSIST_SET_VIDEO_RESOLUTIOND = 93;
+message AssistSetVideoResolutiondEvent {
+  string meetingNo = 1;
+  int64 anchor = 2; // 主播ID -> 被操作的视屏方
+  int64 operator = 3; // 操作人ID
+  VideoResolution resolution = 4;
+}
+
+//// 【客户端发送服务端】 视频分辨率更新事件，
+//    ASSIST_VIDEO_RESOLUTION_UPDATE = 94;
+message AssistVideoResolutionUpdateEvent {
+  string meetingNo = 1;
+  VideoResolution resolution = 2;
+}
+//// 【服务端发送客户端】 视频分辨率更新事件
+//    ASSIST_VIDEO_RESOLUTION_UPDATED = 95;
+message AssistVideoResolutionUpdatedEvent {
+  string meetingNo = 1;
+  int64 anchor = 2;
+  VideoResolution resolution = 3;  // 视频分辨率
+
+}
+
+// 【客户端发送服务端】会议成员设置语言
+//    ASSIST_MEMBER_LANGUAGE_UPDATE = 96;
+message AssistMemberLanguageUpdateEvent {
+  string meetingNo = 1;
+  string language = 2;
+}
+// 会议成员语言
+message MemberLangage{
+  int64 member = 1; // 会议成员userId
+  string language = 2;  // 语言
+}
+
+//// 【服务端发送客户端】会议成员设置语言
+//    ASSIST_MEMBER_LANGUAGE_UPDATED = 97;
+message AssistMemberLanguageUpdatedEvent {
+  string meetingNo = 1;
+  repeated MemberLangage memberLanguageList = 2; // 会议中所有成员语言列表
+
+}
+//// 【客户端发送服务端】实时翻译消息
+//    ASSIST_MEETING_REAL_TIME_MESSAGE = 98;
+message AssistMeetingRealTimeMessageEvent {
+  string meetingNo = 1; // 会议号
+  string message = 2; // 翻译消息
+  int64 timestamp = 3; // 消息发送时间
+  string messageLanguage = 4; // 翻译消息的语言
+}
+//// 【服务端发送客户端】实时翻译消息
+//    ASSIST_MEETING_REAL_TIME_MESSAGED = 99;
+message AssistMeetingRealTimeMessagedEvent {
+  string meetingNo = 1; // 会议号
+  int64 sender = 2; // 发送人ID
+  string message = 3; // 翻译消息
+  int64 timestamp = 4; // 消息发送时间
+  string messageLanguage = 5; // 翻译消息的语言
+}
+// 【服务端发送给客户端】 会议行业变化了
+message AssistMeetingIndustryUpdatedEvent{
+  string meetingNo = 1; // 会议号
+  int64 sender = 2; // 发送人ID
+  string industry = 3; // 行业类型
+}

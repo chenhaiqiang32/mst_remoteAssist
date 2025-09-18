@@ -1,0 +1,257 @@
+* {
+  box-sizing: border-box;
+}
+#app {
+  width: 100%;
+  height: 100%;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  background-color: var(--color-bg-1);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+
+.echarts-tooltip-diy {
+  background: linear-gradient(
+    304.17deg,
+    rgba(253, 254, 255, 0.6) -6.04%,
+    rgba(244, 247, 252, 0.6) 85.2%
+  ) !important;
+  border: none !important;
+  backdrop-filter: blur(10px) !important;
+  /* Note: backdrop-filter has minimal browser support */
+
+  border-radius: 6px !important;
+  .content-panel {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 9px;
+    background: rgba(255, 255, 255, 0.8);
+    width: 164px;
+    height: 32px;
+    line-height: 32px;
+    box-shadow: 6px 0px 20px rgba(34, 87, 188, 0.1);
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .tooltip-title {
+    margin: 0 0 10px 0;
+  }
+  p {
+    margin: 0;
+  }
+  .tooltip-title,
+  .tooltip-value {
+    font-size: 13px;
+    line-height: 15px;
+    display: flex;
+    align-items: center;
+    text-align: right;
+    color: #1d2129;
+    font-weight: bold;
+  }
+  .tooltip-item-icon {
+    display: inline-block;
+    margin-right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+}
+
+.general-card {
+  border-radius: 4px;
+  border: none;
+  & > .arco-card-header {
+    height: auto;
+    padding: 20px;
+    border: none;
+  }
+  & > .arco-card-body {
+    padding: 0 20px 20px 20px;
+  }
+}
+
+.split-line {
+  border-color: rgb(var(--gray-2));
+}
+
+.arco-table-cell {
+  .circle {
+    display: inline-block;
+    margin-right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgb(var(--blue-6));
+    &.pass {
+      background-color: rgb(var(--green-6));
+    }
+  }
+}
+
+.customModal {
+  .arco-modal-body {
+    padding: 0 !important;
+  }
+}
+
+.qrCodeModal {
+  .arco-modal {
+    width: 343px;
+    background-color: transparent !important;
+  }
+}
+
+.ChatMessageSendTextarea {
+  border-radius: var(--border-radius-large);
+  background-color: var(--color-neutral-1);
+  border: 1px solid var(--color-neutral-3);
+  .arco-textarea {
+    background-color: var(--color-neutral-1) !important;
+  }
+}
+
+.modal-container {
+  background: var(--color-neutral-1);
+  border-radius: 8px 8px 8px 8px;
+  max-height: 50%;
+  position: relative;
+  overflow: hidden;
+  .modal-fixed {
+    cursor: pointer;
+    position: absolute;
+    right: 30px;
+    top: 22px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--color-neutral-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+    }
+  }
+  .modal-title {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 20px;
+    color: var(--color-neutral-10);
+  }
+  .modal-main {
+    padding: 0 30px 24px;
+    height: calc(100% - 180px);
+    overflow: hidden;
+    overflow-y: scroll;
+
+    /* 使用统一滚动条样式 */
+    @extend .custom-scrollbar;
+  }
+  .modal-bot {
+    height: 88px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--color-neutral-2);
+    .modal-btn-item {
+      margin: 0 6px;
+      width: 100%;
+    }
+  }
+}
+.schedule-picker-time {
+  width: 100%;
+}
+.schedule-checkbox {
+  margin-bottom: 0;
+}
+.textEllipsis {
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  /*文字超出宽度则显示ellipsis省略号*/
+  text-overflow: ellipsis;
+}
+
+.no-data {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .no-data-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    img {
+      width: auto;
+      height: auto;
+    }
+    .no-data-body-text {
+      margin-top: 10px;
+      text-align: center;
+      span {
+        font-weight: 400;
+        font-size: 12px;
+        color: var(--color-neutral-6);
+      }
+    }
+  }
+}
+.arco-notification-content {
+  line-height: 24px !important;
+}
+
+/* 统一滚动条样式 */
+.custom-scrollbar {
+  /* Webkit 浏览器滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  &::-webkit-scrollbar-track {
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  &::-webkit-scrollbar-track:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Firefox 滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.02);
+
+  /* IE 和 Edge 滚动条样式 */
+  -ms-overflow-style: auto;
+}
