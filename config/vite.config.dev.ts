@@ -13,25 +13,11 @@ export default mergeConfig(
       },
       proxy: {
         '/api': {
-          target: 'https://ucenter-test.teamhelper.cn', // 后台服务器地址
-          // target: 'https://assist-test.teamhelper.cn', // 后台服务器地址
-          // target: 'https://assist.teamhelper.cn', // 后台服务器地址
+          target: 'https://192.168.1.88:9012', // 后台服务器地址
           changeOrigin: true, // 是否允许不同源
-          secure: true, // 支持https
+          secure: false, // 支持https
           rewrite: (path: any) => path.replace(/^\/api/, '/api'),
         },
-        // '/meeting': {
-        //   target: 'https://api-v3-test.teamhelper.cn', // 后台服务器地址
-        //   changeOrigin: true, // 是否允许不同源
-        //   secure: true, // 支持https
-        //   rewrite: (path: any) => path.replace(/^\/api/, '/meeting'),
-        // },
-        // '/chat': {
-        //   target: 'https://api-v3-test.teamhelper.cn', // 后台服务器地址
-        //   changeOrigin: true, // 是否允许不同源
-        //   secure: true, // 支持https
-        //   rewrite: (path: any) => path.replace(/^\/api/, '/chat'),
-        // },
       },
     },
   },
