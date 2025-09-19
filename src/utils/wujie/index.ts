@@ -21,8 +21,23 @@ export const openWujieWindow = (params: WujieWindowOpenParams) => {
 export const wujieCopyToClipboard = (text: string) => {
   window.focus();
   navigator.clipboard.writeText(text);
-}
+};
 
 export function isNodeProd() {
-  return process.env.NODE_ENV === 'production';
+  // 检查是否为本地环境或包含特定IP地址
+  const isLocal =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('192.168.1.88');
+
+  return process.env.NODE_ENV === 'production' && !isLocal;
+}
+
+export function getSocketHost() {
+  const isLocal =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('192.168.1.88');
+
+  return isLocal ? '192.168.1.88:9010' : window.location.host;
 }

@@ -246,7 +246,7 @@
 
   import modalWarningIcon from '@/assets/svg/icon_modal_warning.svg';
   import useNotification from '@/hooks/useNotification';
-  import { isNodeProd, isWujie } from '@/utils/wujie';
+  import { isNodeProd, isWujie, getSocketHost } from '@/utils/wujie';
   import useLocale from '@/hooks/locale';
   import { useWujieOnChangeLocal, useWujieTools } from '@/utils/wujie/hooks';
   import useThMeetingStore from '../../packages/store';
@@ -958,21 +958,18 @@
     THEventBus.off('ThAssistKickOut', handleThAssistKickOut);
   };
   const { appConfig } = useWujieTools();
-  const getWsLocation = () => {
-    if (window.location.host === appConfig.host) {
-      return appConfig.host;
-    } else {
-      return window.location.host;
-    }
-  };
-// 远程协助Websocket-初始化建立连接
+  // 远程协助Websocket-初始化建立连接
   const handleInitTHImEvent = async () => {
     let wssUrl = '';
     if (isWujie()) {
       const origin = appConfig.host;
-      wssUrl = isNodeProd() ? `wss://${origin}/socket` : import.meta.env.VITE_WSS_BASE_URL;
+      wssUrl = isNodeProd()
+        ? `wss://${origin}/socket`
+        : import.meta.env.VITE_WSS_BASE_URL;
     } else {
-      wssUrl = isNodeProd() ? `wss://${window.location.host}/socket`: import.meta.env.VITE_WSS_BASE_URL;
+      wssUrl = isNodeProd()
+        ? `wss://${getSocketHost()}/socket`
+        : import.meta.env.VITE_WSS_BASE_URL;
     }
     ThAssistSocket.value = new THImEvent({
       wssUrl,
@@ -1293,9 +1290,13 @@
     commonStore.updateSocketStatus(2);
     let wssChatUrl = '';
     if (isWujie()) {
-      wssChatUrl = isNodeProd() ? `wss://${appConfig.host}/chat-socket` : import.meta.env.VITE_CHAT_WSS_BASE_URL;
+      wssChatUrl = isNodeProd()
+        ? `wss://${appConfig.host}/chat-socket`
+        : import.meta.env.VITE_CHAT_WSS_BASE_URL;
     } else {
-      wssChatUrl = isNodeProd() ?  `wss://${window.location.host}/chat-socket` : import.meta.env.VITE_CHAT_WSS_BASE_URL;
+      wssChatUrl = isNodeProd()
+        ? `wss://${getSocketHost()}/chat-socket`
+        : import.meta.env.VITE_CHAT_WSS_BASE_URL;
     }
 
     ChatImSocket = new MessageWs({
