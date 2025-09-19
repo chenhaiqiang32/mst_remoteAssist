@@ -1288,7 +1288,7 @@
     if (isWujie()) {
       wssChatUrl = isNodeProd() ? `wss://${appConfig.host}/chat-socket` : import.meta.env.VITE_CHAT_WSS_BASE_URL;
     } else {
-      wssChatUrl = isNodeProd() ?  `wss://${window.location.host}/chat-socket` : import.meta.env.VITE_CHAT_WSS_BASE_URL;
+      wssChatUrl = import.meta.env.VITE_CHAT_WSS_BASE_URL;
     }
 
     ChatImSocket = new MessageWs({
