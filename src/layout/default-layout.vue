@@ -246,7 +246,7 @@
 
   import modalWarningIcon from '@/assets/svg/icon_modal_warning.svg';
   import useNotification from '@/hooks/useNotification';
-  import { isNodeProd, isWujie, getSocketHost } from '@/utils/wujie';
+  import { isWujie, getSocketHost } from '@/utils/wujie';
   import useLocale from '@/hooks/locale';
   import { useWujieOnChangeLocal, useWujieTools } from '@/utils/wujie/hooks';
   import useThMeetingStore from '../../packages/store';
@@ -962,14 +962,9 @@
   const handleInitTHImEvent = async () => {
     let wssUrl = '';
     if (isWujie()) {
-      const origin = appConfig.host;
-      wssUrl = isNodeProd()
-        ? `wss://${origin}/socket`
-        : import.meta.env.VITE_WSS_BASE_URL;
+      wssUrl = `wss://${getSocketHost()}/socket`;
     } else {
-      wssUrl = isNodeProd()
-        ? `wss://${getSocketHost()}/socket`
-        : import.meta.env.VITE_WSS_BASE_URL;
+      wssUrl = `wss://${getSocketHost()}/socket`;
     }
     ThAssistSocket.value = new THImEvent({
       wssUrl,
@@ -1290,13 +1285,9 @@
     commonStore.updateSocketStatus(2);
     let wssChatUrl = '';
     if (isWujie()) {
-      wssChatUrl = isNodeProd()
-        ? `wss://${appConfig.host}/chat-socket`
-        : import.meta.env.VITE_CHAT_WSS_BASE_URL;
+      wssChatUrl = `wss://${getSocketHost()}/chat-socket`;
     } else {
-      wssChatUrl = isNodeProd()
-        ? `wss://${getSocketHost()}/chat-socket`
-        : import.meta.env.VITE_CHAT_WSS_BASE_URL;
+      wssChatUrl = `wss://${getSocketHost()}/chat-socket`;
     }
 
     ChatImSocket = new MessageWs({

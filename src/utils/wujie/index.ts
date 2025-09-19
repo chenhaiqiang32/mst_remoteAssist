@@ -23,16 +23,6 @@ export const wujieCopyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
 };
 
-export function isNodeProd() {
-  // 检查是否为本地环境或包含特定IP地址
-  const isLocal =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.includes('192.168.1.88');
-
-  return process.env.NODE_ENV === 'production' && !isLocal;
-}
-
 export function getSocketHost() {
   const isLocal =
     window.location.hostname === 'localhost' ||
