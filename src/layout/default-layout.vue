@@ -958,7 +958,14 @@
     THEventBus.off('ThAssistKickOut', handleThAssistKickOut);
   };
   const { appConfig } = useWujieTools();
-  // 远程协助Websocket-初始化建立连接
+  const getWsLocation = () => {
+    if (window.location.host === appConfig.host) {
+      return appConfig.host;
+    } else {
+      return window.location.host;
+    }
+  };
+// 远程协助Websocket-初始化建立连接
   const handleInitTHImEvent = async () => {
     let wssUrl = '';
     if (isWujie()) {
@@ -1288,7 +1295,7 @@
     if (isWujie()) {
       wssChatUrl = isNodeProd() ? `wss://${appConfig.host}/chat-socket` : import.meta.env.VITE_CHAT_WSS_BASE_URL;
     } else {
-      wssChatUrl = import.meta.env.VITE_CHAT_WSS_BASE_URL;
+      wssChatUrl = isNodeProd() ?  `wss://${window.location.host}/chat-socket` : import.meta.env.VITE_CHAT_WSS_BASE_URL;
     }
 
     ChatImSocket = new MessageWs({
