@@ -71,7 +71,7 @@
           <a-checkbox
             v-model="userInfo.agreeProtocol"
             checked="agreeProtocol"
-            @change="setAgreeProtocol as any"
+            @change="setAgreeProtocol"
           >
             <span> {{ $t('login.form.agreeProtocol') }}</span>
           </a-checkbox>
@@ -85,8 +85,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
+  import { ref, nextTick } from 'vue';
+  import { useRouter, useRoute } from 'vue-router';
   import { ValidatedError } from '@arco-design/web-vue/es/form/interface';
   import { useI18n } from 'vue-i18n';
   import {
@@ -100,9 +100,11 @@
   import useLoading from '@/hooks/loading';
   import type { LoginData } from '@/api/user';
   import { Message } from '@arco-design/web-vue';
+  import EventListener from '@/utils/event-listener';
 
   const { t } = useI18n();
   const router = useRouter();
+  const route = useRoute();
   const errorMessage = ref('');
   const { loading, setLoading } = useLoading();
   const userStore = useUserStore();
@@ -145,9 +147,30 @@
         setTokenType(res.data.tokenType);
         setToken(res.data.token);
         setRefreshToken(res.data.refreshToken);
-        router.push({
-          name: 'MessageList',
-        });
+
+        // 检查是否有会议邀请跳转
+        const meetingToken = route.query.meetingToken as string;
+        const meetingNo = route.query.meetingNo as string;
+        if (meetingNo || meetingToken) {
+          // 跳转到会议页面并触发加入会议
+          await router.push('/Meeting-list');
+          // 等待路由跳转完成
+          await nextTick();
+          // 等待页面完全加载后再发送事件
+          setTimeout(() => {
+            const eventData = meetingNo ? { meetingNo } : { meetingToken };
+            console.log(
+              '登录成功后发送 invitation-join-meeting 事件，数据:',
+              eventData
+            );
+            EventListener.emit('invitation-join-meeting', eventData);
+          }, 1500);
+        } else {
+          // 正常跳转到消息列表
+          router.push({
+            name: 'MessageList',
+          });
+        }
       } catch (err) {
         errorMessage.value = (err as Error).message;
       } finally {

@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.57.0",
+    "@types/qrcode": "^1.5.5",
     "@vueuse/core": "^10.11.0",
     "agora-rtc-sdk-ng": "^4.23.2",
     "arco-design-pro-vue": "^2.7.3",

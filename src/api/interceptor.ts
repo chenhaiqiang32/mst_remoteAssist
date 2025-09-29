@@ -58,9 +58,9 @@ axios.interceptors.response.use(
     if ([20408].includes(res.code)) {
       // todo 通知父应用账户被登陆了
       if (isWujie()) {
-        window?.$wujie?.bus?.$emit('REPEAT_LOGIN', {
-          name: 'login'
-        })
+        window?.$wujie?.bus?.$emit('repeatLogin', {
+          name: 'login',
+        });
       }
       return res;
     }

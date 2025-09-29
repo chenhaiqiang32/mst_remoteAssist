@@ -58,6 +58,10 @@
     handleHeaderLink();
   };
   onMounted(() => {
-    handleGetPlatformDetail();
+    // 检查当前路由是否为邀请页面，如果是则跳过平台详情获取
+    const currentRoute = window.location.hash;
+    if (!currentRoute.includes('#/invitation')) {
+      handleGetPlatformDetail();
+    }
   });
 </script>

@@ -26,10 +26,13 @@ export default function setupUserLoginInfoGuard(router: Router) {
           // });
           return;
         }
-        if (to.name !== 'NoPermission') {
+        if (to.name !== 'NoPermission' && to.name !== 'Invitation') {
           await userStore.info();
         }
-        setTimestamp();
+        // 邀请页面不更新时间戳，避免触发多标签页冲突检测
+        if (to.name !== 'Invitation') {
+          setTimestamp();
+        }
         next();
       } catch (error) {
         // todo 通知父应用账户被登陆了
@@ -56,7 +59,8 @@ export default function setupUserLoginInfoGuard(router: Router) {
       if (
         to.name === 'login' ||
         to.name === 'ForgetPassword' ||
-        to.name === 'Protocol'
+        to.name === 'Protocol' ||
+        to.name === 'Invitation'
       ) {
         next();
         return;

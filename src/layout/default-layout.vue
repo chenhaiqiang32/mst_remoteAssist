@@ -414,7 +414,7 @@
     MeetingStore.updateAnswerVisible(false);
   };
   // 接收到被邀请业务
-  const handleAssistInvited = (data: any) => {
+const handleAssistInvited = (data: any) => {
     if (
       (MeetingStore.answerInfo && MeetingStore.answerInfo.meetingNo) ||
       (ThAssistSocket.value &&
@@ -616,6 +616,36 @@
   };
   const handleThAssistPlanStatusUpdated = () => {
     EventListener.emit('meeting-list-update');
+  };
+  
+  // 处理邀请加入会议
+const handleInvitationJoinMeeting = async (data: any) => {
+    console.log('收到 invitation-join-meeting 事件，数据:', data);
+    if (data.meetingToken) {
+      // 如果有 meetingToken，需要先调用 joinMeeting API
+      try {
+        const { joinMeeting } = await import('@/api/invitation');
+        const response = await joinMeeting({
+          meetingToken: data.meetingToken,
+        });
+
+        if (response.data.code === 200) {
+          // 成功获取会议号，执行加入会议逻辑
+          const meetingData = {
+            meetingNo: response.data.data.meetingNo,
+          };
+          await handleUpcomingJoinMeeting(meetingData);
+        } else {
+          Message.error(response.data.msg || '加入会议失败');
+        }
+      } catch (error: any) {
+        console.error('加入会议失败:', error);
+        Message.error('加入会议失败');
+      }
+    } else if (data.meetingNo) {
+      // 如果直接有 meetingNo，直接执行加入会议逻辑
+      await handleUpcomingJoinMeeting(data);
+    }
   };
   const ThMeetingStore = useThMeetingStore();
   const handleThAssistKickOut = (data: any) => {
@@ -1278,6 +1308,7 @@
     );
     EventListener.off('navbar-show-ar-login-qr-code', handleShowArLoginQrCode);
     EventListener.off('meeting-notification-close', handleClearNotification);
+    EventListener.off('invitation-join-meeting', handleInvitationJoinMeeting);
   };
   // 即时通讯 websocket 初始化建立连接
   const handleInitChatImEvent = async () => {
@@ -1483,6 +1514,12 @@
     EventListener.off('sys-no-permission-access', handleSysNoPermissionAccess);
   };
   window.addEventListener('storage', (e) => {
+    // 检查当前是否在邀请页面，如果是则跳过冲突检测
+    const currentPath = window.location.hash;
+    if (currentPath.includes('#/invitation')) {
+      return;
+    }
+    
     const tokenValue = ref(getToken());
     const localTime: any = getLocalTimestamp();
     const sessionTime: any = getSessionTimestamp();
@@ -1532,6 +1569,11 @@
     handleMonitorSystemEventListener();
     handleNetworkStatusChange();
     handleAddNetworkListeners();
+    
+    // 立即注册事件监听器，确保能接收到邀请加入会议事件
+    EventListener.on('invitation-join-meeting', handleInvitationJoinMeeting);
+    console.log('已注册 invitation-join-meeting 事件监听器');
+    
     // 获取重要数据
     if (!isInit.value) {
       console.log('首次加载重要数据');
@@ -1550,6 +1592,7 @@
     handleClearInitEvent();
     handleClearNotification();
     handleClearNetworkListeners();
+    EventListener.off('invitation-join-meeting', handleInvitationJoinMeeting);
     importantDataReloadNum.value = 0;
     isInit.value = false;
     logoutModalBtnVisible.value = false;

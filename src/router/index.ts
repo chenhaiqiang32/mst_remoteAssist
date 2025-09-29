@@ -48,6 +48,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/invitation',
+      name: 'Invitation',
+      component: () => import('@/views/invitation/index.vue'),
+      meta: {
+        requiresAuth: false,
+      },
+    },
+    {
       path: '/NoPermission',
       name: 'NoPermission',
       component: () => import('@/views/redirect/noPermission.vue'),
