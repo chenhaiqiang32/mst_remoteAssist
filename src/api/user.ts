@@ -68,3 +68,8 @@ export function getApplicationCode(params: any) {
     params,
   });
 }
+
+// 批量获取存储桶预览URL
+export function getBatchPreviewUrls(data: { objectKeys: string[] }) {
+  return axios.post<any>('/api/meeting/file/preview-url/batch', data);
+}
