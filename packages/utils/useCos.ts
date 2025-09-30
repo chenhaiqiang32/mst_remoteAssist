@@ -1,112 +1,133 @@
 import axios from 'axios';
-import COS from 'cos-js-sdk-v5';
 
-interface UseCosOptions {
-  basicPath: string;
-  bucket: string;
-  bucketUrl: string;
-  startTime: number;
-  expiredTime: number;
-  region: string;
-  sessionToken: string;
-  tmpSecretId: string;
-  tmpSecretKey: string;
+// 新的上传接口返回数据类型
+interface UploadUrlResponse {
+  objectKey: string;
+  uploadUrl: string;
+  previewUrl: string;
 }
 
-export function useCos({
-  basicPath,
-  bucket,
-  bucketUrl,
-  expiredTime,
-  startTime,
-  region,
-  sessionToken,
-  tmpSecretId,
-  tmpSecretKey,
-}: UseCosOptions) {
-  const cos = new COS({
-    getAuthorization(options, callback) {
-      callback({
-        TmpSecretId: tmpSecretId,
-        TmpSecretKey: tmpSecretKey,
-        SecurityToken: sessionToken,
-        StartTime: startTime,
-        ExpiredTime: expiredTime,
-        ScopeLimit: true,
-      });
-    },
-  });
+// 新的上传结果类型
+interface UploadResult {
+  objectKey: string;
+  previewUrl: string;
+  statusCode: number;
+  Location?: string; // 保持兼容性
+}
 
-  // 上传函数封装，带超时处理
+export function useCos() {
+  // 获取上传URL
+  const getUploadUrl = async (fileName: string): Promise<UploadUrlResponse> => {
+    try {
+      const response = await axios.get('/api/meeting/file/upload-url', {
+        params: {
+          fileName,
+        },
+      });
+
+      console.log('获取上传URL响应:', response);
+
+      // 兼容不同的响应格式
+      if (response.data) {
+        // 格式1: { code: 200, data: { objectKey, uploadUrl, previewUrl } }
+        if (response.data.code === 200 && response.data.data) {
+          return response.data.data;
+        }
+        // 格式2: 直接返回 { objectKey, uploadUrl, previewUrl }
+        if (
+          response.data.objectKey &&
+          response.data.uploadUrl &&
+          response.data.previewUrl
+        ) {
+          return response.data;
+        }
+      }
+
+      // 如果都不匹配，记录响应并抛出错误
+      console.error('获取上传URL失败，响应格式不正确:', response.data);
+      throw new Error(`获取上传URL失败: ${JSON.stringify(response.data)}`);
+    } catch (error: any) {
+      console.error('获取上传URL请求失败:', error);
+      throw new Error(`获取上传URL失败: ${error.message}`);
+    }
+  };
+
+  // 上传文件到存储桶
   const uploadFile = async (
     file: File | Blob,
-    key: string,
+    fileName: string,
     onProgress?: (progress: number) => void,
-    timeout: number = 1000 * 30 // 超时时间，默认10秒
-  ): Promise<COS.PutObjectResult> => {
-    if (!region) {
-      console.log(file);
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('path', `${basicPath}${key}`);
-      const res: any = await axios.post<any>(
-        '/api/document/minio/file/upload',
-        formData,
-        {
-          headers: {
-            Token: `${sessionToken}`,
-          },
-        }
-      );
+    timeout: number = 1000 * 30 // 超时时间，默认30秒
+  ): Promise<UploadResult> => {
+    try {
+      // 1. 获取上传URL
+      const uploadInfo = await getUploadUrl(fileName);
 
-      if (res.code === 200) {
-        return {
-          ...res.data,
-          statusCode: res.code,
-          Location: res.data.url,
-        };
-      }
-    }
-    return new Promise((resolve, reject) => {
-      // 记录超时的 ID
-      let taskId: any;
-      const timeoutId = setTimeout(() => {
-        if (taskId) {
-          cos.cancelTask(taskId); // 超时取消上传任务
-        }
-        reject(new Error('upload-timeout'));
-      }, timeout);
+      // 2. 使用XMLHttpRequest上传文件到存储桶（兼容进度监听）
+      const uploadPromise = new Promise<number>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
 
-      taskId = cos.putObject(
-        {
-          Bucket: bucket,
-          Region: region,
-          Key: `${basicPath}${key}`,
-          Body: file,
-          onProgress(progressData) {
-            const progress = (progressData.loaded / progressData.total) * 100;
-            if (onProgress) {
+        // 设置超时
+        xhr.timeout = timeout;
+
+        // 监听上传进度
+        if (onProgress && xhr.upload) {
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const progress = (event.loaded / event.total) * 100;
               onProgress(progress);
             }
-          },
-        },
-        (err, data) => {
-          clearTimeout(timeoutId); // 清除超时计时器
-          if (err) {
-            reject(err);
-          } else {
-            resolve({
-              ...data,
-              Location: `${bucketUrl}${basicPath}${key}`,
-            });
-          }
+          });
         }
-      );
-    });
+
+        // 监听完成
+        xhr.addEventListener('load', () => {
+          if (xhr.status === 200 || xhr.status === 204) {
+            resolve(xhr.status);
+          } else {
+            reject(new Error(`上传失败，状态码: ${xhr.status}`));
+          }
+        });
+
+        // 监听错误
+        xhr.addEventListener('error', () => {
+          reject(new Error('上传过程中发生错误'));
+        });
+
+        // 监听超时
+        xhr.addEventListener('timeout', () => {
+          reject(new Error('上传超时'));
+        });
+
+        // 发起PUT请求
+        xhr.open('PUT', uploadInfo.uploadUrl, true);
+        xhr.setRequestHeader(
+          'Content-Type',
+          file.type || 'application/octet-stream'
+        );
+        xhr.send(file);
+      });
+
+      const status = await uploadPromise;
+
+      if (status === 200 || status === 204) {
+        return {
+          objectKey: uploadInfo.objectKey,
+          previewUrl: uploadInfo.previewUrl,
+          statusCode: 200,
+          Location: uploadInfo.previewUrl, // 保持兼容性
+        };
+      }
+      throw new Error('文件上传失败');
+    } catch (error) {
+      console.error('文件上传错误:', error);
+      throw error;
+    }
   };
 
   return {
     uploadFile,
+    getUploadUrl,
   };
 }
 

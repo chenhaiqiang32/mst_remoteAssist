@@ -1825,15 +1825,7 @@
       ThMeetingStore.updateUploadFileStatus(true);
       const blob = new Blob(chunks, { type: 'video/mp4' });
       const nowMillisecond = getMillisecond();
-      const cosConfigRes = await ThImEvent.uploadCosConfig();
-      if (cosConfigRes.code !== 200) {
-        msg.error(t('mst.message.board.menu.scdt.msg1'));
-        return;
-      }
-      const { uploadFile } = useCos({
-        ...cosConfigRes.data,
-        basicPath: `${cosConfigRes.data.basicPath}meeting/${ThMeetingStore.meetingInfo.meetingNo}/LocalRecord/`,
-      });
+      const { uploadFile } = useCos();
       const uploadRes = await uploadFile(blob, `Record${nowMillisecond}.mp4`);
       if (uploadRes.statusCode !== 200) {
         msg.error(t('mst.message.board.menu.scdt.msg2'));
@@ -1843,7 +1835,7 @@
 
       const res = await ThImEvent.uploadRecordScreen({
         meetingId: ThMeetingStore.meetingInfo.meetingId,
-        recordUrl: uploadRes.Location,
+        recordUrl: uploadRes.objectKey,
       });
       if (res.code !== 200 && res.code !== 401) {
         msg.error(res.msg);
@@ -2560,15 +2552,7 @@
       const blob = dataURItoBlob(base64Data);
       // 冻屏开启上传
       const nowMillisecond = getMillisecond();
-      const cosConfigRes = await ThImEvent.uploadCosConfig();
-      if (cosConfigRes.code !== 200) {
-        msg.error(t('mst.message.board.menu.scdt.msg1'));
-        throw new Error('cosConfigRes error');
-      }
-      const { uploadFile } = useCos({
-        ...cosConfigRes.data,
-        basicPath: `${cosConfigRes.data.basicPath}meeting/${ThMeetingStore.meetingInfo.meetingNo}/Screenshot/`,
-      });
+      const { uploadFile } = useCos();
       const uploadRes = await uploadFile(
         blob,
         `ShotScreen${nowMillisecond}.png`
@@ -2577,7 +2561,7 @@
         msg.warning(t('mst.menu.dongPing.msg.error2'));
         throw new Error('uploadRes error');
       }
-      ThMeetingStore.updateBoardStatusBaseMap(uploadRes.Location);
+      ThMeetingStore.updateBoardStatusBaseMap(uploadRes.previewUrl);
       // boardScreenVisible.value = true;
       handleBoardScreenModalSure();
 
@@ -2726,15 +2710,7 @@
       const blob = dataURItoBlob(base64Data);
       // 主播画面开启上传
       const nowMillisecond = getMillisecond();
-      const cosConfigRes = await ThImEvent.uploadCosConfig();
-      if (cosConfigRes.code !== 200) {
-        msg.error(t('mst.message.board.menu.scdt.msg1'));
-        throw new Error('cosConfigRes error');
-      }
-      const { uploadFile } = useCos({
-        ...cosConfigRes.data,
-        basicPath: `${cosConfigRes.data.basicPath}meeting/${ThMeetingStore.meetingInfo.meetingNo}/Screenshot/`,
-      });
+      const { uploadFile } = useCos();
       const uploadRes = await uploadFile(
         blob,
         `ShotScreen${nowMillisecond}.png`
@@ -2745,7 +2721,7 @@
       }
       const res = await ThImEvent.uploadShotScreen({
         meetingId: ThMeetingStore.meetingInfo.meetingId,
-        screenshotUrl: uploadRes.Location,
+        screenshotUrl: uploadRes.objectKey, // 使用objectKey作为资源路径
       });
       if (res.code !== 200 && res.code !== 401) {
         msg.error(res.msg);
@@ -3717,15 +3693,7 @@
         const base64Data = boardCanvasRef.value.toDataURL('image/jpeg', 1.0);
         const blob: any = dataURItoBlob(base64Data);
         const nowMillisecond = getMillisecond();
-        const cosConfigRes = await ThImEvent.uploadCosConfig();
-        if (cosConfigRes.code !== 200) {
-          msg.error(t('mst.message.board.menu.scdt.msg1'));
-          return;
-        }
-        const { uploadFile } = useCos({
-          ...cosConfigRes.data,
-          basicPath: `${cosConfigRes.data.basicPath}meeting/${ThMeetingStore.meetingInfo.meetingNo}/Photograph/`,
-        });
+        const { uploadFile } = useCos();
         const uploadRes = await uploadFile(
           blob,
           `Photograph${nowMillisecond}.png`
@@ -3736,7 +3704,7 @@
         }
         const res = await ThImEvent.uploadShotScreen({
           meetingId: ThMeetingStore.meetingInfo.meetingId,
-          screenshotUrl: uploadRes.Location,
+          screenshotUrl: uploadRes.objectKey, // 使用objectKey作为资源路径
         });
         if (res.code !== 200 && res.code !== 401) {
           msg.error(res.msg);

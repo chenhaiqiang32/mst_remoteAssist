@@ -553,30 +553,35 @@
     try {
       ThMeetingStore.updateUploadFileStatus(true);
       if (file.type === 'image/png' || file.type === 'image/jpeg') {
-        const cosConfigRes = await ThMeetingStore.ThImEvent.uploadCosConfig();
-        if (cosConfigRes.code !== 200) {
-          msg.error(t('mst.message.board.menu.scdt.msg1'));
-          return;
-        }
-        const { uploadFile } = useCos({
-          ...cosConfigRes.data,
-          basicPath: `${cosConfigRes.data.basicPath}meeting/${ThMeetingStore.meetingInfo.meetingNo}/Artboard/`,
-        });
-        // 自定义文件上传逻辑
-        const uploadRes = await uploadFile(file, `${Date.now()}_${file.name}`);
+        const { uploadFile } = useCos();
+        // 生成文件名：文件名_时间戳
+        const fileName = `${file.name.split('.')[0]}_${Date.now()}.${file.name.split('.').pop()}`;
+        
+        // 使用新的上传逻辑
+        const uploadRes = await uploadFile(file, fileName);
         if (uploadRes.statusCode !== 200) {
           msg.error(t('mst.message.board.menu.scdt.msg2'));
           return;
         }
+        
+        // 使用objectKey作为资源路径，previewUrl作为预览地址
+        const uploadResult = {
+          objectKey: uploadRes.objectKey,
+          previewUrl: uploadRes.previewUrl,
+          statusCode: uploadRes.statusCode,
+          Location: uploadRes.previewUrl, // 保持兼容性
+        };
+        
         // 在这里处理文件上传，例如上传到服务器
         scdtMenu.value.status = true;
         msg.success(t('mst.message.board.menu.scdt.msg3'));
-        THEventBus.emit('th-board-upload-map', uploadRes);
+        THEventBus.emit('th-board-upload-map', uploadResult);
       } else {
         msg.error(t('mst.message.board.menu.scdt.msg2'));
       }
     } catch (error) {
       console.log(error);
+      msg.error(t('mst.message.board.menu.scdt.msg1'));
     } finally {
       ThMeetingStore.updateUploadFileStatus(false);
     }

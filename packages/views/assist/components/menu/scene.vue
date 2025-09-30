@@ -480,29 +480,23 @@ import { computed, ref, watchEffect } from 'vue';
         fileType.value = -1; // 其他文件类型
       }
 
-      const cosConfigRes = await ThMeetingStore.ThImEvent.uploadCosConfig();
-      if (cosConfigRes.code !== 200) {
-        msg.error(t('mst.message.board.menu.scdt.msg1'));
-        return;
-      }
-
-      const { uploadFile } = useCos({
-        ...cosConfigRes.data,
-        basicPath: `${cosConfigRes.data.basicPath}meeting/${ThMeetingStore.meetingInfo.meetingNo}/FileUpload/`,
-      });
-
-      // 自定义文件上传逻辑
-      const uploadRes = await uploadFile(file, `${Date.now()}_${file.name}`);
+      const { uploadFile } = useCos();
+      // 生成文件名：文件名_时间戳
+      const fileName = `${file.name.split('.')[0]}_${Date.now()}.${file.name.split('.').pop()}`;
+      
+      // 使用新的上传逻辑
+      const uploadRes = await uploadFile(file, fileName);
       if (uploadRes.statusCode !== 200) {
         msg.error(t('mst.message.board.menu.scdt.msg2'));
         return;
       }
 
+      // 使用objectKey作为资源路径保存到服务器
       const res: any = await ThMeetingStore.ThImEvent.uploadMeetingFile({
         meetingId: ThMeetingStore.meetingInfo.meetingId,
         attachmentType: fileType.value,
-        attachmentUrl: uploadRes.Location,
-        attachmentName: `${Date.now()}_${file.name}`,
+        attachmentUrl: uploadRes.objectKey, // 使用objectKey作为资源路径
+        attachmentName: fileName,
       });
       if (res.code !== 200 && res.code !== 401) {
         msg.error(res.msg);
@@ -511,9 +505,8 @@ import { computed, ref, watchEffect } from 'vue';
       msg.success(t('mst.message.board.menu.scdt.msg3'));
       THEventBus.emit('th-scene-upload-file');
     } catch (error: any) {
-      if (error.message === 'upload-timeout') {
-        msg.error(t('mst.message.board.menu.scdt.msg1'));
-      }
+      console.error('文件上传错误:', error);
+      msg.error(t('mst.message.board.menu.scdt.msg1'));
     } finally {
       ThMeetingStore.updateUploadFileStatus(false);
     }
