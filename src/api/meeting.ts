@@ -69,3 +69,13 @@ export function getLanguageList() {
 export function getIndustryList() {
   return axios.get<any>(`/api/meeting/plan/getIndustryList`);
 }
+
+// 获取流程列表
+export function getSopList() {
+  return axios.get<any>(`/api/meeting/meeting/listSop`);
+}
+
+// 流程下发
+export function distributeSop(data: any) {
+  return axios.post<any>(`/api/meeting/meeting/distributeSop`, data);
+}

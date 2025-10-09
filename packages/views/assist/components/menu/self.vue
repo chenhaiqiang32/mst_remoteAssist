@@ -159,6 +159,16 @@
       </div>
       <div class="self-menu-item-b"> {{ qyjyMenu.label }} </div>
     </div>
+    <div
+      class="self-menu-item"
+      :datatype="ThMeetingStore.lectureInfo.activeScreenLayout ? 'hidden' : ''"
+      @click="handleOpenSopDistribute"
+    >
+      <div class="self-menu-item-t">
+        <img :src="lcxfMenu.icon" alt="" />
+      </div>
+      <div class="self-menu-item-b"> {{ lcxfMenu.label }} </div>
+    </div>
     <div class="self-menu-item" @click="() => handleOpenMessage(true)">
       <div class="self-menu-item-t">
         <img :src="xxMenu.icon" alt="" />
@@ -330,6 +340,12 @@
     activeIcon: qyjyActiveIcon,
     status: ThMeetingStore.allAudioDisable,
   });
+  const lcxfMenu = ref({
+    label: '流程下发',
+    icon: xxIcon,
+    activeIcon: xxIcon,
+    status: 0,
+  });
   const handleChangeQyjyMenu = () => {
     if (
       ThMeetingStore.meetingInfo.masterId !== ThMeetingStore.mineInfo.userId
@@ -370,6 +386,9 @@
   });
   const handleCloseMessageDropdown = () => {
     MessageDropdownRef.value?.closeDropdown();
+  };
+  const handleOpenSopDistribute = () => {
+    THEventBus.emit('th-self-open-sop-distribute');
   };
   defineExpose({
     handleSelfCloseCamera,

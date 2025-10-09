@@ -383,6 +383,11 @@
 
     <!--    设置语言弹窗-->
     <SetLanguageModal v-if="!!ThMeetingStore.lectureInfo?.transState?.transModalVisible"/>
+    <!-- 流程下发弹窗 -->
+    <SopDistributeModal
+      v-if="sopDistributeVisible"
+      @handle-close="handleSopDistributeModalClose"
+    ></SopDistributeModal>
     <canvas ref="canvasElement" style="display: none"></canvas>
     <!-- 告警页面 -->
     <div
@@ -471,6 +476,7 @@
   import GlassJoinModal from './components/modal/glass_join.vue';
   import GlassQrCode from './components/modal/glass_qr_code.vue';
   import SetLanguageModal from './components/modal/set_language.vue';
+  import SopDistributeModal from './components/modal/sop_distribute.vue';
 
   import dragIcon from './assets/board/icon_drag.png';
   import dragIngIcon from './assets/board/icon_drag_1.png';
@@ -1735,6 +1741,13 @@
   };
   const handleGlassCodeModalClose = () => {
     glassQrCodeVisible.value = false;
+  };
+  const sopDistributeVisible = ref(false);
+  const handleOpenSopDistributeModal = () => {
+    sopDistributeVisible.value = true;
+  };
+  const handleSopDistributeModalClose = () => {
+    sopDistributeVisible.value = false;
   };
 
   // 邀请Modal业务
@@ -3845,6 +3858,7 @@
     );
     THEventBus.on('th-self-invite-member', handleOpenInviteMemberModal);
     THEventBus.on('th-self-link-share', handleOpenLinkShareModal);
+    THEventBus.on('th-self-open-sop-distribute', handleOpenSopDistributeModal);
     THEventBus.on('th-psn-render-local-stream', handleRenderLocalStream);
     THEventBus.on('th-psn-set-lecture-info', handleSetLectureInfo);
 
@@ -4000,6 +4014,7 @@
     );
     THEventBus.off('th-self-invite-member', handleOpenInviteMemberModal);
     THEventBus.off('th-self-link-share', handleOpenLinkShareModal);
+    THEventBus.off('th-self-open-sop-distribute', handleOpenSopDistributeModal);
     THEventBus.off('th-psn-render-local-stream', handleRenderLocalStream);
     THEventBus.off('th-psn-set-lecture-info', handleSetLectureInfo);
 
