@@ -17,9 +17,9 @@
     <!-- 不存在视频流主播画面 -->
     <div v-else ref="lectureVideoRef" class="th-ma-lecture-main no-video">
       <div class="th-ma-lecture-main-body">
-        <img :src="ThMeetingStore.lectureInfo?.avatarUrl" alt="" />
+        <img :src="curLectureInfo?.avatarUrl" alt="" />
         <div class="th-ma-lecture-main-body-name">
-          <span>{{ ThMeetingStore.lectureInfo?.name }}</span>
+          <span>{{ curLectureInfo?.name }}</span>
         </div>
       </div>
     </div>
