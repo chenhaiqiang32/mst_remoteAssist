@@ -15,7 +15,7 @@ export interface HttpResponse<T = unknown> {
 }
 
 // 存储桶配置
-const BUCKET_KEYS = ['sop/company_', 'avatar/'];
+const BUCKET_KEYS = ['meeting/company_', 'avatar/'];
 const EXCLUDE_URLS = ['/api/meeting/file/upload-url'];
 
 // 检查字符串是否为存储桶key
