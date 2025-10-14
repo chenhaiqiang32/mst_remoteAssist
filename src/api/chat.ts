@@ -10,7 +10,7 @@ export function inviteGroupMember(data: any) {
 }
 // 退出群组
 export function leaveGroup(params: any) {
-  return axios.delete<any>(`/api/chat/group/member/quit/${params.groupId}`);
+  return axios.post<any>(`/api/chat/group/member/quit/${params.groupId}`);
 }
 
 /**
@@ -18,14 +18,14 @@ export function leaveGroup(params: any) {
  * data: { groupId: number; userIds: [0] }
  * */
 export function removeGroupMember(data: any) {
-  return axios.delete<any>(`/api/chat/group/member/remove`, { data });
+  return axios.post<any>(`/api/chat/group/member/remove`, { data });
 }
 
 /**
  * 解散群聊
  */
 export function disbandGroup(data: any) {
-  return axios.delete<any>(`/api/chat/group/disband/${data.groupId}`);
+  return axios.post<any>(`/api/chat/group/disband/${data.groupId}`);
 }
 /**
  * 创建群组

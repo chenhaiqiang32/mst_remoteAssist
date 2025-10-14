@@ -28,7 +28,7 @@ export function getMeetingGroupList() {
 
 // 删除(取消)会议计划接口
 export function delMeetingPlan(data: any) {
-  return axios.delete<any>(`/api/meeting/plan/cancel/${data.planId}`);
+  return axios.post<any>(`/api/meeting/plan/cancel/${data.planId}`);
 }
 // 会议详情接口
 export function getMeetingDetail(params: any) {
@@ -46,7 +46,7 @@ export function updateMeetingPlan(data: any) {
 }
 // 结束会议
 export function overMeetingPlan(data: any) {
-  return axios.delete<any>(`/api/meeting/plan/close/${data.planId}`);
+  return axios.post<any>(`/api/meeting/plan/close/${data.planId}`);
 }
 
 // 会议记录列表

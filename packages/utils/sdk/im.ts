@@ -1094,7 +1094,7 @@ export default class ThIM {
     this.clearRoomParams();
     return new Promise<void>((resolve, reject) => {
       axios
-        .delete(`${this.hostUrl}/api/meeting/meeting/close/${data.meetingId}`)
+        .post(`${this.hostUrl}/api/meeting/meeting/close/${data.meetingId}`)
         .then((response: any) => {
           resolve(response);
         })
