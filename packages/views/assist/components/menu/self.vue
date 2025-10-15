@@ -225,7 +225,8 @@
 
   import qyjyIcon from '../../assets/icons/icon_all_silent_0.png';
   import qyjyActiveIcon from '../../assets/icons/icon_all_silent_1.png';
-  import xxIcon from '../../assets/icons/icon_message.png';
+import xxIcon from '../../assets/icons/icon_message.png';
+  import xiafaIcon from '../../assets/icons/icon_xiafa.png';
   import selectYrIcon1 from '../../assets/icons/icon_qy_yqzzcy.png';
   import selectYrIcon2 from '../../assets/icons/icon_qy_yqybry.png';
   import arrowTopIcon from '../../assets/icons/icon_arrow_top.png';
@@ -342,8 +343,8 @@
   });
   const lcxfMenu = ref({
     label: '流程下发',
-    icon: xxIcon,
-    activeIcon: xxIcon,
+    icon: xiafaIcon,
+    activeIcon: xiafaIcon,
     status: 0,
   });
   const handleChangeQyjyMenu = () => {
