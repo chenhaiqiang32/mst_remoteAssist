@@ -430,7 +430,7 @@
   const handleGetConversationList = async () => {
     conversationList.value = await getAllConversations();
     chatStore.updateConversationList(conversationList.value);
-    console.log('handleGetConversationList', conversationList.value);
+    console.log('handleGetConversationList1', conversationList.value);
   };
   const handleFilterConversationList = () => {
     if (!searchOptions.value.condition) {

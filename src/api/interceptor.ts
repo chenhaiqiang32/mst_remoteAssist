@@ -181,8 +181,10 @@ axios.interceptors.response.use(
       return res;
     }
 
-    // 处理存储桶key替换（仅对GET请求且不在排除列表中的接口）
-    if (response.config.method === 'get') {
+    // 处理存储桶key替换（仅对GET请求且不在排除列表中的接口，或特定的POST请求）
+    const isGetRequest = response.config.method === 'get';
+    const isSpecialPostRequest = response.config.method === 'post' && response.config.url === '/api/chat/group';
+    if (isGetRequest || isSpecialPostRequest) {
       const requestUrl = response.config.url || '';
       const shouldExclude = EXCLUDE_URLS.some((url) =>
         requestUrl.includes(url)
