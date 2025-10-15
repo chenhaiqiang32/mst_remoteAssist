@@ -95,14 +95,14 @@
           </div>
         </a-form-item>
         <a-form-item content-class="longtime-checkbox" hide-label>
-          <div class="bx">
+          <!-- <div class="bx">
             <span>{{ $t('meeting.schedule.form.cloud.record') }}</span>
             <a-switch v-model="recordStatus" size="small" />
           </div>
           <div class="bx">
             <span>{{ $t('meeting.schedule.form.ai.summary') }}</span>
             <a-switch v-model="aiStatus" size="small" />
-          </div>
+          </div> -->
           <!--          <div class="bx">-->
           <!--            <span>{{ $t('meeting.schedule.form.ai.translation') }}</span> <a-switch v-model="escaping" size="small"/>-->
           <!--          </div>-->

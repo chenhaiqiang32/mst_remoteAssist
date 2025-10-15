@@ -55,7 +55,7 @@
         </div>
       </div>
       <!-- 云端录制 -->
-      <div class="room-options-m-i" @click="handleChangeCloudRecord">
+      <!-- <div class="room-options-m-i" @click="handleChangeCloudRecord">
         <div class="room-options-m-it">
           <img
             :src="roomOptions.cloudRecord ? recordActiveIcon : recordIcon"
@@ -65,7 +65,7 @@
         <div class="room-options-m-ib text-ellipsis">
           {{ t('meeting.room.option.meeting.cloud.record') }}
         </div>
-      </div>
+      </div> -->
     </div>
     <div class="room-options-b">
       <div class="room-options-bm">
@@ -75,10 +75,10 @@
         <!--            alt=""-->
         <!--          />-->
         <!--        </div>-->
-        <div class="room-options-br">
+        <!-- <div class="room-options-br">
           <span>{{ t('meeting.room.option.meeting.abstract') }}</span>
           <div><a-switch v-model="roomOptions.abstract" size="small" /></div>
-        </div>
+        </div> -->
       </div>
       <div class="room-options-bm">
         <!--        <div class="room-options-bl" @click="handleChangeTranslation">-->
@@ -87,10 +87,10 @@
         <!--            alt=""-->
         <!--          />-->
         <!--        </div>-->
-        <div class="room-options-br">
+        <!-- <div class="room-options-br">
           <span>{{ t('meeting.room.option.meeting.abstract5') }}</span>
           <div><a-switch v-model="roomOptions.escaping" size="small" /></div>
-        </div>
+        </div> -->
       </div>
     </div>
     <div class="schedule-checkbox schedule-checkbox-voice">

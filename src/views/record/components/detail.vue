@@ -346,26 +346,26 @@
   const collaborativeType: any = ref();
   const handleFormateData = () => {
     collaborativeType.value = [
-      {
-        type: 1,
-        icon: infoIcon1,
-        title: t('meeting.detail.assist.zl.hyzy'),
-        desc: t('meeting.detail.assist.zl.hyzy.en'),
-        hasData: meetingDetail.value.summaryCount > 0,
-        showNum: false,
-        btn: ['look'],
-        url: 'abstract',
-      },
-      {
-        type: 2,
-        icon: infoIcon2,
-        title: t('meeting.detail.assist.zl.sphy'),
-        desc: t('meeting.detail.assist.zl.sphy.en'),
-        hasData: meetingDetail.value.cloudVideoCount > 0,
-        showNum: false,
-        btn: ['preview'],
-        url: 'video',
-      },
+      // {
+      //   type: 1,
+      //   icon: infoIcon1,
+      //   title: t('meeting.detail.assist.zl.hyzy'),
+      //   desc: t('meeting.detail.assist.zl.hyzy.en'),
+      //   hasData: meetingDetail.value.summaryCount > 0,
+      //   showNum: false,
+      //   btn: ['look'],
+      //   url: 'abstract',
+      // },
+      // {
+      //   type: 2,
+      //   icon: infoIcon2,
+      //   title: t('meeting.detail.assist.zl.sphy'),
+      //   desc: t('meeting.detail.assist.zl.sphy.en'),
+      //   hasData: meetingDetail.value.cloudVideoCount > 0,
+      //   showNum: false,
+      //   btn: ['preview'],
+      //   url: 'video',
+      // },
       {
         type: 3,
         icon: infoIcon3,

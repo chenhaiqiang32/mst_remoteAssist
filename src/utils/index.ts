@@ -127,3 +127,73 @@ export function downloadFile(file: any, name: any, type?: any) {
   link.click();
   document.body.removeChild(link);
 }
+
+// 存储桶key模式
+const BUCKET_KEYS = [
+  'chat/company_',
+  'sop/company_',
+  'avatar/',
+  'manage/company_',
+  'meeting/company_',
+  'operation/company_',
+];
+
+// 检查字符串是否为存储桶key
+export function isBucketKey(str: string): boolean {
+  if (typeof str !== 'string') return false;
+
+  // 检查是否包含存储桶key模式
+  const hasBucketKey = BUCKET_KEYS.some((bucketKey) => str.includes(bucketKey));
+  if (hasBucketKey) {
+    return true;
+  }
+
+  // 检查是否匹配存储桶URL模式 (sop/company_数字/...)
+  const bucketPattern = /^sop\/company_\d+\//;
+  if (bucketPattern.test(str)) {
+    return true;
+  }
+
+  return false;
+}
+
+// 递归遍历数据结构，收集存储桶keys
+export function collectBucketKeys(
+  data: any,
+  bucketKeys: Set<string> = new Set()
+): Set<string> {
+  if (typeof data === 'string' && isBucketKey(data)) {
+    bucketKeys.add(data);
+  } else if (Array.isArray(data)) {
+    data.forEach((item) => collectBucketKeys(item, bucketKeys));
+  } else if (data && typeof data === 'object') {
+    Object.values(data).forEach((value) =>
+      collectBucketKeys(value, bucketKeys)
+    );
+  }
+  return bucketKeys;
+}
+
+// 递归替换数据结构中的存储桶keys
+export function replaceBucketKeys(data: any, urlMap: Record<string, string>): any {
+  if (typeof data === 'string') {
+    if (isBucketKey(data)) {
+      const previewUrl = urlMap[data];
+      if (previewUrl) {
+        return previewUrl;
+      }
+    }
+    return data;
+  }
+  if (Array.isArray(data)) {
+    return data.map((item) => replaceBucketKeys(item, urlMap));
+  }
+  if (data && typeof data === 'object') {
+    const result: any = {};
+    Object.entries(data).forEach(([key, value]) => {
+      result[key] = replaceBucketKeys(value, urlMap);
+    });
+    return result;
+  }
+  return data;
+}

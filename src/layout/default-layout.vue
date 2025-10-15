@@ -211,6 +211,8 @@
   import { useChatIndexedDB } from '@/utils/sdk/chatDB';
   import * as ChatPB from '@/utils/proto/chatProtocol';
   import AssistErrorType from '@/utils/sdk/assistErrorType';
+  import { isBucketKey } from '@/utils';
+  import { getBatchPreviewUrls } from '@/api/user';
 
   import modalSocketOffIcon from '@/assets/svg/icon_modal_socket_off.svg';
   import modalSocketCloseIcon from '@/assets/svg/icon_modal_socket_close.svg';
@@ -1051,12 +1053,32 @@ const handleInvitationJoinMeeting = async (data: any) => {
   };
   // 创建群事件
   const handleChatGroupCreated = async (data: any) => {
-    await addConversation({
+    // 处理存储桶key转换
+    const conversationData = {
       conversationId: `${data.chatType}_${data.targetId}`,
       ...data,
       status: 1,
       unreadCount: 0,
-    });
+    };
+
+    // 如果 targetAvatarUrl 是存储桶key，需要转换为预览URL
+    const { targetAvatarUrl } = data;
+    if (targetAvatarUrl && isBucketKey(targetAvatarUrl)) {
+      try {
+        const response = await getBatchPreviewUrls({
+          objectKeys: [targetAvatarUrl],
+        });
+
+        if (response?.data?.[targetAvatarUrl]?.previewUrl) {
+          conversationData.targetAvatarUrl = response.data[targetAvatarUrl].previewUrl;
+        }
+      } catch (error) {
+        console.error('转换存储桶key为预览URL失败:', error);
+      }
+    }
+
+    await addConversation(conversationData);
+    
     const parentId = `${data.chatType}_${
       data.chatType === ChatPB.ChatType.GROUP_CHAT
         ? data.targetId
@@ -1092,10 +1114,28 @@ const handleInvitationJoinMeeting = async (data: any) => {
         item.conversationId === `${ChatPB.ChatType.GROUP_CHAT}_${data.groupId}`
     );
     console.log('群组信息更新事件-conversation', conversation);
+
+    // 处理存储桶key转换
+    const { avatarUrl: originalAvatarUrl, groupName } = data;
+    let avatarUrl = originalAvatarUrl;
+    if (avatarUrl && isBucketKey(avatarUrl)) {
+      try {
+        const response = await getBatchPreviewUrls({
+          objectKeys: [avatarUrl],
+        });
+
+        if (response?.data?.[avatarUrl]?.previewUrl) {
+          avatarUrl = response.data[avatarUrl].previewUrl;
+        }
+      } catch (error) {
+        console.error('转换存储桶key为预览URL失败:', error);
+      }
+    }
+
     chatStore.updateConversations({
       ...conversation,
-      targetAvatarUrl: data.avatarUrl,
-      targetName: data.groupName,
+      targetAvatarUrl: avatarUrl,
+      targetName: groupName,
     });
     EventListener.emit('group-info-change');
   };
