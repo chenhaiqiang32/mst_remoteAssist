@@ -53,7 +53,10 @@
         </div>
         <div class="detail-panel-top-btn">
           <a-space v-if="isMember" :size="16">
-            <a-tooltip :content="$t('meeting.tooltip.btn.send.meeting')" position="bottom">
+            <a-tooltip
+              :content="$t('meeting.tooltip.btn.send.meeting')"
+              position="bottom"
+            >
               <div
                 class="detail-panel-top-btn-item"
                 @click="handleMeetingInviteMember"
@@ -77,7 +80,10 @@
               </div>
             </a-tooltip>
             <template v-if="chatStore.curConversation.chatType === 1">
-              <a-tooltip :content="$t('meeting.tooltip.btn.group.setting')"  position="bottom">
+              <a-tooltip
+                :content="$t('meeting.tooltip.btn.group.setting')"
+                position="bottom"
+              >
                 <div
                   class="detail-panel-top-btn-item"
                   @click="handleOpenGroupChatSetting"
@@ -138,7 +144,10 @@
               </template>
             </div>
           </div>
-          <div v-if="isMember" class="detail-panel-main-left-send">
+          <div
+            v-if="isMember || chatStore.curConversation.chatType === 0"
+            class="detail-panel-main-left-send"
+          >
             <a-textarea
               v-model="newMessage"
               :auto-size="{
@@ -476,8 +485,8 @@
       ThMeetingStore.updateRoomTranslateInfo({
         ...ThMeetingStore.roomTranslateInfo,
         ...res.data,
-        open: !!res.data?.enableTranslation
-      })
+        open: !!res.data?.enableTranslation,
+      });
       commonStore.updateBtnLoading(false);
       if (res.code !== 200 && res.code !== 401) {
         if (
@@ -518,8 +527,7 @@
         userIds: objToArrForKey(meetingStore.roomInvitePsn, 'userId'),
         enableTranslation: meetingStore.roomOptions?.escaping ? '1' : '0',
         languageType: ThMeetingStore.roomTranslateInfo?.languageType,
-        industryType: ThMeetingStore.roomTranslateInfo?.industryType
-
+        industryType: ThMeetingStore.roomTranslateInfo?.industryType,
       });
       if (res.code !== 200 && res.code !== 401) {
         commonStore.updateBtnLoading(false);

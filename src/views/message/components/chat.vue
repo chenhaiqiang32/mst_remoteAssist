@@ -95,7 +95,7 @@
     condition: '',
   });
   const showContent = (data) => {
-    const { messageType, content } = data;
+    const { messageType, content, name, targetName } = data;
 
     try {
       if (messageType === ChatPB.MessageType.SYSTEM) {
@@ -218,7 +218,7 @@
       }
     } catch (error) {
       // 如果解析失败，则返回原始内容
-      return content;
+      return `${name} 邀请 ${targetName} 加入了群聊`;
     }
   };
 

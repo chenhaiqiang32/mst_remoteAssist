@@ -211,7 +211,7 @@
     // 调用长期会议接口
     const res: any = await meetingStore.createLongtimeMeeting({
       ...form.value,
-      enableTranslation: form.value?.escaping ? '1' : '0',
+      enableTranslation: form.value?.enableTranslation ? '1' : '0',
     });
     if (res.code !== 200 && res.code !== 401) {
       Message.error(res.msg);
