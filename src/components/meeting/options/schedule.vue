@@ -342,7 +342,7 @@
     if (!form.value.planId) {
       const res: any = await meetingStore.createScheduleMeeting({
         ...form.value,
-        enableTranslation: form.value?.enableTranslation ? '1' : '0',
+        enableTranslation: form.value?.voiceTranslation ? '1' : '0',
       });
       if (res.code !== 200 && res.code !== 401) {
         Message.error(res.msg);
