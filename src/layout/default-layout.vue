@@ -1,3 +1,4 @@
+<!-- eslint-disable consistent-return -->
 <template>
   <a-layout
     :class="{
@@ -263,8 +264,12 @@
   const { t } = useI18n();
   const { logout } = useUser();
   const dbName = 'ChatDB';
-  const { addConversation, addMessage, getAllConversations, clearAll } =
-    useChatIndexedDB(dbName);
+  const {
+    addConversation,
+    addMessage,
+    getAllConversations,
+    clearAll,
+  } = useChatIndexedDB(dbName);
 
   const addressStore = useAddressStore();
   const isInit = ref(false);
@@ -827,7 +832,13 @@ const handleInvitationJoinMeeting = async (data: any) => {
     }
     console.log('加载次要数据--最近消息-res', res);
     if (res.data && res.data.length > 0) {
-      res.data.forEach(async (message: any) => {
+      res.data.forEach(async (message: any, index: number) => {
+        if (message.messageType === 5) {
+          // 删除 messageType === 5 的记录
+          // res.data.splice(index, 1);
+          message.content = '';
+          return; // 跳过后续处理
+        }
         if (message.chatType === ChatPB.ChatType.GROUP_CHAT) {
           const newMessage = {
             ...message,
@@ -843,6 +854,7 @@ const handleInvitationJoinMeeting = async (data: any) => {
         }
       });
     }
+    console.log('加载次要数据--最近消息-res-after', res);
     return res;
   };
   // 重要数据-会话列表
@@ -859,8 +871,12 @@ const handleInvitationJoinMeeting = async (data: any) => {
           conversationId: `${conversation.chatType}_${conversation.targetId}`,
           status: 1,
         });
+        console.log('加载重要数据--会话列表-conversation', conversation);
         await handleGetRecentMessage({
-          userId: conversation.targetId,
+          ...(conversation.chatType === 0 && { userId: conversation.targetId }),
+          ...(conversation.chatType === 1 && {
+            groupId: conversation.targetId,
+          }),
           pageNo: 1,
           pageSize: !conversation.unreadCount ? 10 : conversation.unreadCount,
         });
