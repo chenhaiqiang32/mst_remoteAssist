@@ -1,1 +1,0 @@
-import{h as t}from"./index.d4df4270.js";import"./arco.638965b6.js";import"./chart.ffc0c533.js";import"./vue.125da600.js";function a(e){return t.get(`api/meeting/plan/share/detailByToken/${e}`)}function p(e){return t.post("api/meeting/plan/share/joinMeeting",e)}export{a as getMeetingDetailByToken,p as joinMeeting};

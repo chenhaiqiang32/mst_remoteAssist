@@ -350,7 +350,10 @@
       }
       Message.success(t('meeting.schedule.message.success'));
     } else {
-      const res: any = await meetingStore.updateMeetingPlan(form.value);
+      const res: any = await meetingStore.updateMeetingPlan({
+        ...form.value,
+        enableTranslation: form.value?.voiceTranslation ? '1' : '0',
+      });
       if (res.code !== 200 && res.code !== 401) {
         Message.error(res.msg);
         return;
