@@ -145,10 +145,13 @@ axios.interceptors.request.use(
     if (!config.headers) {
       config.headers = {};
     }
+    // 获取当前浏览器时区
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     config.headers = {
       ...config.headers,
       'User-Client': '3',
       'Accept-Language': i18n.global.locale.value,
+      'Timezone': timezone,
     };
     const token = getToken();
     const tokenType = getTokenType();
