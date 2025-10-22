@@ -918,7 +918,7 @@ function sendRunTask(dataObj?: any) {
         input_audio_format: 'pcm16',
         output_audio_format: 'pcm16',
         translation: {
-          language: 'en',
+          language: 'zh',
         },
       },
     };
@@ -958,6 +958,19 @@ function sendRunTask(dataObj?: any) {
                     messageLanguage: 'cn',
                   });
             break;
+            case 'response.text.text':
+              // console.log('>>>>>>>>>>>>>>>>> response.text.done', dataObj);
+                  ThImEvent.assistMeetingRealTimeMessage({
+                      /** 会议号 */
+                      meetingNo: ThMeetingStore.meetingInfo.meetingNo,
+                      /** 翻译消息 */
+                      message: dataObj.text,
+                      /** 消息发送时间 */
+                      timestamp: Date.now(),
+                      /** 翻译消息的语言 */
+                      messageLanguage: 'cn',
+                    });
+              break;
           default:
             break;
         } 
