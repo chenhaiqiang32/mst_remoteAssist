@@ -81,16 +81,13 @@
       <boardMenu ref="boardMenuRef"></boardMenu>
     </div>
     <!-- 标注，放大、缩小、拖动 -->
-    <div
-      class="th-ma-board-menu th-ma-board-menu-operate"
-      :class="{
-        // todo这个class是链接眼镜或者安卓端 下方 摄像头缩放 被重合
-        'th-ma-board-menu_camara_layout':
-          ThMeetingStore.scene === 0 &&
-          (ThMeetingStore.lectureInfo?.client === PB.Client.ANDROID ||
-            ThMeetingStore.lectureInfo?.client === PB.Client.GLASS),
-      }"
-    >
+    <div class="th-ma-board-menu th-ma-board-menu-operate"
+         :class="{
+      // todo这个class是链接眼镜或者安卓端 下方 摄像头缩放 被重合
+      'th-ma-board-menu_camara_layout': ThMeetingStore.scene === 0 &&
+        (ThMeetingStore.lectureInfo?.client === PB.Client.ANDROID ||
+          ThMeetingStore.lectureInfo?.client === PB.Client.GLASS)
+    }">
       <div
         v-if="ThMeetingStore.scene === 1 || ThMeetingStore.scene === 2"
         class="th-ma-board-menu-option"
@@ -146,15 +143,14 @@
         </MstTooltip>
       </div>
       <div
-        v-show="!!ThMeetingStore.roomTranslateInfo?.enableTranslation"
         :datatype="ThMeetingStore.roomTranslateInfo?.enableTranslation"
+        v-show="!!ThMeetingStore.roomTranslateInfo?.enableTranslation"
         :class="{
           'th-ma-board-menu-option': true,
-          'th-ma-board-menu-option-translate':
-            ThMeetingStore.roomTranslateInfo?.enableTranslation,
+          'th-ma-board-menu-option-translate': ThMeetingStore.roomTranslateInfo?.enableTranslation
         }"
       >
-        <div style="display: flex; align-items: center; gap: 8px">
+        <div style="display:flex;align-items: center;gap: 8px">
           <MstTooltip
             :content="t('mst.scene.trans')"
             :position="`bottom`"
@@ -162,27 +158,18 @@
             class=""
           >
             <div
+              @click="toogleTransState"
               :class="{
                 'th-ma-board-m-i': true,
                 // 'th-ma-board-m-i_selected': !!ThMeetingStore.lectureInfo?.transState?.transModalVisible
-                'th-ma-board-m-i_selected':
-                  !!ThMeetingStore?.roomTranslateInfo?.open,
+                'th-ma-board-m-i_selected': !!ThMeetingStore?.roomTranslateInfo?.open,
               }"
-              @click="toogleTransState"
             >
               <img :src="transIcon" />
             </div>
           </MstTooltip>
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              gap: 6px;
-              cursor: pointer;
-            "
-            @click="handleTransLate"
-          >
-            <span style="color: #fff">{{ mapperLanguage || '' }}</span>
+          <div @click="handleTransLate" style="display:flex;align-items: center;gap: 6px;cursor: pointer">
+            <span style="color: #fff">{{mapperLanguage || ''}}</span>
             <img :src="xiaIcon" style="width: 10px" />
           </div>
         </div>
@@ -395,9 +382,7 @@
     ></GlassQrCode>
 
     <!--    设置语言弹窗-->
-    <SetLanguageModal
-      v-if="!!ThMeetingStore.lectureInfo?.transState?.transModalVisible"
-    />
+    <SetLanguageModal v-if="!!ThMeetingStore.lectureInfo?.transState?.transModalVisible"/>
     <!-- 流程下发弹窗 -->
     <SopDistributeModal
       v-if="sopDistributeVisible"
@@ -425,11 +410,7 @@
     </div>
     <!-- 翻译 -->
     <div
-      v-if="
-        transWssInfo.url &&
-        transLanguages.length > 0 &&
-        ThMeetingStore?.roomTranslateInfo?.open
-      "
+      v-if="transWssInfo.url && transLanguages.length > 0 && ThMeetingStore?.roomTranslateInfo?.open"
       class="trans-language-txt"
     >
       <div
@@ -457,9 +438,6 @@
   import { v4 as uuidv4 } from 'uuid';
   import Long from 'long';
   import { useWujieTools } from '@/utils/wujie/hooks';
-  import transIcon from '@/assets/options/icon_translate.png';
-  import xiaIcon from '@/assets/options/icon_xiajiantou.png';
-  import { useMeetingStore } from '@/store';
   import * as PB from '../../proto/protocol';
   import ThRTC from '../../utils/sdk/rtc';
   import IndexDBService from '../../utils/db';
@@ -530,9 +508,12 @@
   import grayMiddle from './assets/icons/icon_000_middle.png';
   import fffMiddle from './assets/icons/icon_fff_middle.png';
   import fffRT from './assets/icons/icon_fff_rt.png';
+  import transIcon from '@/assets/options/icon_translate.png';
+  import xiaIcon from '@/assets/options/icon_xiajiantou.png';
   import msg from '../../services/msg';
   import { AssistCanvasDrawingSet, DrawingData } from '../../utils/crdt/index';
   import { VideoResolution } from '../../proto/protocol';
+  import { useMeetingStore } from '@/store';
 
   const { publicPath } = useWujieTools();
   const bubbleMsgRef = ref(null);
@@ -619,7 +600,7 @@
     }, {});
     const languageType = ThMeetingStore.roomTranslateInfo?.languageType;
     return result[languageType || ''];
-  });
+  })
   const props = defineProps<{
     sdkEvent: any;
   }>();
@@ -908,19 +889,28 @@
   };
 
   // 发送run-task指令
-function sendRunTask(dataObj?: any) {
+  function sendRunTask() {
+    const TASK_ID = uuidv4().replace(/-/g, '').slice(0, 32);
     const runTaskMessage = {
-      event_id: dataObj.event_id,
-      type: 'session.update',
-      session: {
-        modalities: ['text'],
-        voice: 'Cherry',
-        input_audio_format: 'pcm16',
-        output_audio_format: 'pcm16',
-        translation: {
-          language: 'en',
-        },
+      header: {
+        action: 'run-task',
+        task_id: TASK_ID,
+        streaming: 'duplex'
       },
+      payload: {
+        task_group: 'audio',
+        task: 'asr',
+        function: 'recognition',
+        model: 'gummy-realtime-v1',
+        parameters: {
+          sample_rate: 16000,
+          format: 'wav',
+          transcription_enabled: true,
+          translation_enabled: true,
+          translation_target_languages: ['zh']
+        },
+        input: {}
+      }
     };
     transWss.value.send(JSON.stringify(runTaskMessage));
   }
@@ -928,86 +918,55 @@ function sendRunTask(dataObj?: any) {
     console.log('trans-wss-open');
     isTransWssOpen.value = true;
   };
-  function sendAudioStream(dataOb:any) {
-    // eslint-disable-next-line no-use-before-define
-    handleTransInterval(dataOb);
+  function sendAudioStream() {
+    handleTransInterval()
   }
   // 翻译socket 事件
   const handleTransWssMessage = (message: any) => {
     if (message.data) {
       const dataObj: any = JSON.parse(message.data);
-      console.log(
-        '>>>>>>>>>>>>>>>>>tarnslate data',
-        dataObj,
-        transWssInfo.value.translateVendor
-      );
+      console.log('>>>>>>>>>>>>>>>>>tarnslate data', dataObj, transWssInfo.value.translateVendor);
       // 阿里云走新的逻辑
       if (transWssInfo.value.translateVendor === 'aliyun') {
-        switch (dataObj.type) {
-          case 'session.created':
-            sendRunTask(dataObj);
+        switch (dataObj.header.event) {
+          // 服务端的厂商wss连接成功 发送阿里云任务
+          case 'connection-created':
+            sendRunTask();
             break;
-          case 'session.updated':
-            sendAudioStream(dataObj);
+          case 'task-started':
+            sendAudioStream();
             break;
-          case 'response.text.done':
-            console.log('>>>>>>>>>>>>>>>>> response.text.done', dataObj);
-                 ThImEvent.assistMeetingRealTimeMessage({
+          case 'result-generated':
+            // 解析payload中的translations
+            if (dataObj.payload.output.translations && dataObj.payload.output.translations.length > 0) {
+              dataObj.payload.output.translations.forEach(translation => {
+                if (translation.sentence_end) {
+                  const text = translation.text;
+                  ThImEvent.assistMeetingRealTimeMessage({
                     /** 会议号 */
                     meetingNo: ThMeetingStore.meetingInfo.meetingNo,
                     /** 翻译消息 */
-                    message: dataObj.text,
+                    message: text,
                     /** 消息发送时间 */
                     timestamp: Date.now(),
                     /** 翻译消息的语言 */
                     messageLanguage: 'cn',
-                  });
+                  })
+                }
+              });
+            }
+            break;
+          case 'task-finished':
+            console.error('任务完成');
+            transWss.value.close();
+            break;
+          case 'task-failed':
+            console.error('任务失败：', dataObj.header.error_message);
+            transWss.value.close();
             break;
           default:
-            break;
-        } 
-        // switch (dataObj.header.event) {
-        //   // 服务端的厂商wss连接成功 发送阿里云任务
-        //   case 'session.created':
-        //     sendRunTask(dataObj);
-        //     break;
-        //   case 'task-started':
-        //     sendAudioStream();
-        //     break;
-        //   case 'result-generated':
-        //     // 解析payload中的translations
-        //     if (
-        //       dataObj.payload.output.translations &&
-        //       dataObj.payload.output.translations.length > 0
-        //     ) {
-        //       dataObj.payload.output.translations.forEach((translation) => {
-        //         if (translation.sentence_end) {
-        //           const { text } = translation;
-        //           ThImEvent.assistMeetingRealTimeMessage({
-        //             /** 会议号 */
-        //             meetingNo: ThMeetingStore.meetingInfo.meetingNo,
-        //             /** 翻译消息 */
-        //             message: text,
-        //             /** 消息发送时间 */
-        //             timestamp: Date.now(),
-        //             /** 翻译消息的语言 */
-        //             messageLanguage: 'cn',
-        //           });
-        //         }
-        //       });
-        //     }
-        //     break;
-        //   case 'task-finished':
-        //     console.error('任务完成');
-        //     transWss.value.close();
-        //     break;
-        //   case 'task-failed':
-        //     console.error('任务失败：', dataObj.header.error_message);
-        //     transWss.value.close();
-        //     break;
-        //   default:
-        //     console.error('未知事件：', dataObj.header.event);
-        // }
+            console.error('未知事件：', dataObj.header.event);
+        }
       }
       // 讯飞走原来的逻辑
       if (transWssInfo.value.translateVendor === 'xunfei') {
@@ -1034,7 +993,7 @@ function sendRunTask(dataObj?: any) {
                   timestamp: Date.now(),
                   /** 翻译消息的语言 */
                   messageLanguage: 'cn',
-                });
+                })
               }
             }
           }
@@ -1061,22 +1020,13 @@ function sendRunTask(dataObj?: any) {
   /**
    * todo 创建声明wss周期 ，获取声网音频数据后发送给服务商
    */
-const handleTransInterval = (dataOb: any) => {
-    const { event_id: eventId } = dataOb;
+  const handleTransInterval = () => {
     transWssInterval.value = setInterval(() => {
       if (isTransWssOpen.value && transWss.value?.readyState === 1) {
-        // Get the Base64 audio data
-        const audioData = audioDataArray.value;
-        if (audioData && audioData.length > 0) {
-          // Send in the specified JSON format
-          const message = {
-            event_id: eventId,
-            type: 'input_audio_buffer.append',
-            audio: audioData,
-          };
-          transWss.value?.send(JSON.stringify(message));
-          // Clear the audio data after sending
-          audioDataArray.value = '';
+        const chunkSize = transWssInfo.value.translateVendor === 'aliyun' ? 640 : 1280; // 40ms数据块
+        const audioData: any = audioDataArray.value.splice(0, chunkSize);
+        if (audioData.length > 0) {
+          transWss.value?.send(new Int8Array(audioData));
         }
       }
     }, 40);
@@ -1089,14 +1039,7 @@ const handleTransInterval = (dataOb: any) => {
       const currentChannelData = buffer.getChannelData(0);
       const bufTo16kHz = to16kHz(currentChannelData);
       const bufTo16BitPCM = to16BitPCM(bufTo16kHz);
-
-      // Convert audio data to Base64
-      const audioBuffer = new Uint8Array(bufTo16BitPCM);
-      const base64Audio = btoa(String.fromCharCode(...audioBuffer));
-
-      console.log('>>>>>>>>>>>>>>>>> audioDataArray', bufTo16BitPCM);
-      console.log('>>>>>>>>>>>>>>>>> base64Audio', base64Audio);
-      audioDataArray.value = base64Audio;
+      audioDataArray.value = bufTo16BitPCM;
     }, 2048);
     await sleep(1000 * 1);
     // todo 讯飞才走直接发语音流，阿里云翻译应该在自定义socket发起语音流
@@ -2351,9 +2294,8 @@ const handleTransInterval = (dataOb: any) => {
   };
 
   const toogleTransState = () => {
-    ThMeetingStore.roomTranslateInfo.open =
-      !ThMeetingStore?.roomTranslateInfo?.open;
-  };
+    ThMeetingStore.roomTranslateInfo.open = !ThMeetingStore?.roomTranslateInfo?.open
+  }
   // todo 点击翻译按钮
   const handleTransLate = () => {
     // - 关闭状态下
@@ -2361,10 +2303,9 @@ const handleTransInterval = (dataOb: any) => {
     // - 开启状态下点击图标，操作为关闭
     // - 点击右侧语言弹出字幕翻译的弹窗
     ThMeetingStore.lectureInfo.transState = {
-      transModalVisible:
-        !ThMeetingStore.lectureInfo?.transState?.transModalVisible,
+      transModalVisible: !ThMeetingStore.lectureInfo?.transState?.transModalVisible,
     };
-  };
+  }
   // todo 切换布局 重新绘制所有线条
   const handleCanvasLayout = (aKey: number) => {
     ThMeetingStore.lectureInfo.activeScreenLayout = aKey;
@@ -3881,11 +3822,13 @@ const handleTransInterval = (dataOb: any) => {
       '渲染翻译文本----data & meetingInfo',
       data,
       ThImEvent.meetingInfo,
-      ThMeetingStore.mineInfo
+      ThMeetingStore.mineInfo,
     );
     if (data.meetingNo === ThImEvent.meetingInfo.meetingNo) {
       // 翻译非自己的信息
-      if (data.sender !== ThMeetingStore.mineInfo.userId) {
+      if (
+        data.sender !== ThMeetingStore.mineInfo.userId
+      ) {
         const userInfo = await ThMeetingStore.filterMemberInfo(data.sender);
         transLanguages.value.push({
           ...data,
