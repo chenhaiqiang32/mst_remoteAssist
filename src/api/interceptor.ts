@@ -29,8 +29,8 @@ const EXCLUDE_URLS = ['/api/meeting/file/upload-url'];
 const isBucketKey = (str: string): boolean => {
   if (typeof str !== 'string') return false;
 
-  // 检查是否包含存储桶key模式
-  const hasBucketKey = BUCKET_KEYS.some((bucketKey) => str.includes(bucketKey));
+  // 检查是否以存储桶key模式开头
+  const hasBucketKey = BUCKET_KEYS.some((bucketKey) => str.startsWith(bucketKey));
   if (hasBucketKey) {
     return true;
   }

@@ -86,16 +86,16 @@
             <span>{{ $t('meeting.schedule.form.voiceTranslation') }}</span>
             <a-switch v-model="form.voiceTranslation" size="small" />
           </div>
-          <div class="ax" v-if="form.voiceTranslation">
+          <div v-if="form.voiceTranslation" class="ax">
             <div class="label">{{
               $t('meeting.schedule.form.myLanguage')
             }}</div>
             <div>
               <a-select v-model="form.languageType">
                 <a-option
+                  v-for="item in countryList"
                   class="st-img"
                   :value="item.value"
-                  v-for="item in countryList"
                   ><img :src="item.ctry" /><span>{{
                     item.label
                   }}</span></a-option
@@ -103,7 +103,7 @@
               </a-select>
             </div>
           </div>
-          <div class="ax" v-if="form.voiceTranslation && wordList.length > 0">
+          <div v-if="form.voiceTranslation && wordList.length > 0" class="ax">
             <div class="label">{{ $t('meeting.schedule.form.thesaurus') }}</div>
             <div>
               <a-select v-model="form.industryType" :options="wordList" />
@@ -199,8 +199,8 @@
     recordStatus: '0',
     aiStatus: '0',
     escaping: '0',
-    voiceTranslation: false, //开启语音
-    languageType: 'cn', //我的语言
+    voiceTranslation: false, // 开启语音
+    languageType: 'cn', // 我的语言
     industryType: 'default', // 行业词库
   });
   watchEffect(() => {
@@ -282,6 +282,7 @@
       );
       rangDate.value = [startTime, endTime];
       console.log('handleInitFormData---', props.meetingDetail, rangDate);
+
       form.value = {
         planId: props.meetingDetail.planId,
         subject: props.meetingDetail.subject,
@@ -292,6 +293,7 @@
         aiStatus: props.meetingDetail.aiStatus.toString(),
         escaping: props.meetingDetail.escaping.toString(),
         planType: props.meetingDetail.planType,
+        voiceTranslation: props.meetingDetail.enableTranslation === 1,
       };
       recordStatus.value = props.meetingDetail.recordStatus.toString() === '1';
       aiStatus.value = props.meetingDetail.aiStatus.toString() === '1';
