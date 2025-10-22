@@ -187,6 +187,7 @@
       };
     });
   });
+  console.log('countryList---', meetingStore.languageList);
   const emit = defineEmits(['handleClose', 'handleInviteOpen']);
   const props = defineProps<{
     meetingDetail?: any;
@@ -200,15 +201,15 @@
     aiStatus: '0',
     escaping: '0',
     voiceTranslation: false, // 开启语音
-    languageType: 'cn', // 我的语言
+    languageType: 'zh', // 我的语言
     industryType: 'default', // 行业词库
   });
-  watchEffect(() => {
-    const isAliun = countryList.value?.some((v: any) => v.type === 'aliyun');
-    if (isAliun) {
-      form.value.languageType = 'zh';
-    }
-  });
+  // watchEffect(() => {
+  //   const isAliun = countryList.value?.some((v: any) => v.type === 'aliyun');
+  //   if (isAliun) {
+  //     form.value.languageType = 'zh';
+  //   }
+  // });
   // 计算时间选择器属性
   const timePickerProps = computed(() => {
     const now = dayjs();
@@ -282,7 +283,6 @@
       );
       rangDate.value = [startTime, endTime];
       console.log('handleInitFormData---', props.meetingDetail, rangDate);
-
       form.value = {
         planId: props.meetingDetail.planId,
         subject: props.meetingDetail.subject,
@@ -294,6 +294,8 @@
         escaping: props.meetingDetail.escaping.toString(),
         planType: props.meetingDetail.planType,
         voiceTranslation: props.meetingDetail.enableTranslation === 1,
+        languageType: props.meetingDetail.languageType,
+        // industryType: props.meetingDetail.industryType,
       };
       recordStatus.value = props.meetingDetail.recordStatus.toString() === '1';
       aiStatus.value = props.meetingDetail.aiStatus.toString() === '1';
