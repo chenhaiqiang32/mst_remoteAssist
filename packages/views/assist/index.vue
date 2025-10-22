@@ -936,11 +936,6 @@ function sendRunTask(dataObj?: any) {
   const handleTransWssMessage = (message: any) => {
     if (message.data) {
       const dataObj: any = JSON.parse(message.data);
-      console.log(
-        '>>>>>>>>>>>>>>>>>tarnslate data',
-        dataObj,
-        transWssInfo.value.translateVendor
-      );
       // 阿里云走新的逻辑
       if (transWssInfo.value.translateVendor === 'aliyun') {
         switch (dataObj.type) {
@@ -951,7 +946,7 @@ function sendRunTask(dataObj?: any) {
             sendAudioStream(dataObj);
             break;
           case 'response.text.done':
-            console.log('>>>>>>>>>>>>>>>>> response.text.done', dataObj);
+            // console.log('>>>>>>>>>>>>>>>>> response.text.done', dataObj);
                  ThImEvent.assistMeetingRealTimeMessage({
                     /** 会议号 */
                     meetingNo: ThMeetingStore.meetingInfo.meetingNo,
@@ -1012,12 +1007,12 @@ function sendRunTask(dataObj?: any) {
       // 讯飞走原来的逻辑
       if (transWssInfo.value.translateVendor === 'xunfei') {
         if (dataObj.code === '0') {
-          console.log('翻译socket 事件-dataObj.data', dataObj);
+          // console.log('翻译socket 事件-dataObj.data', dataObj);
           if (dataObj.data) {
             const data: any = JSON.parse(dataObj.data);
             if (data.dst && data.type === 0) {
               const text: any = removeFirstSpecialChar(data.dst);
-              console.log('>>>>>>>>>>>>>>>>> result', data.dst, text);
+              // console.log('>>>>>>>>>>>>>>>>> result', data.dst, text);
               if (text) {
                 // ThImEvent.sendAssistMeetingRealTimeTranslation({
                 //   meetingNo: ThMeetingStore.meetingInfo.meetingNo,
