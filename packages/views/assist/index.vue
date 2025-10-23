@@ -3885,12 +3885,12 @@ const handleTransInterval = (dataOb: any) => {
   };
   // 渲染翻译文本
   const handleRenderTransLanguages = async (data: any) => {
-    console.log(
-      '渲染翻译文本----data & meetingInfo',
-      data,
-      ThImEvent.meetingInfo,
-      ThMeetingStore.mineInfo
-    );
+    // console.log(
+    //   '渲染翻译文本----data & meetingInfo',
+    //   data,
+    //   ThImEvent.meetingInfo,
+    //   ThMeetingStore.mineInfo
+    // );
     if (data.meetingNo === ThImEvent.meetingInfo.meetingNo) {
       // 翻译非自己的信息
       if (data.sender !== ThMeetingStore.mineInfo.userId) {
