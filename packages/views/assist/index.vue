@@ -1102,8 +1102,8 @@ const handleTransInterval = (dataOb: any) => {
       const audioBuffer = new Uint8Array(bufTo16BitPCM);
       const base64Audio = btoa(String.fromCharCode(...audioBuffer));
 
-      console.log('>>>>>>>>>>>>>>>>> audioDataArray', bufTo16BitPCM);
-      console.log('>>>>>>>>>>>>>>>>> base64Audio', base64Audio);
+      // console.log('>>>>>>>>>>>>>>>>> audioDataArray', bufTo16BitPCM);
+      // console.log('>>>>>>>>>>>>>>>>> base64Audio', base64Audio);
       audioDataArray.value = base64Audio;
     }, 2048);
     await sleep(1000 * 1);
