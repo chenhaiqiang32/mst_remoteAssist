@@ -295,7 +295,7 @@
         planType: props.meetingDetail.planType,
         voiceTranslation: props.meetingDetail.enableTranslation === 1,
         languageType: props.meetingDetail.languageType,
-        // industryType: props.meetingDetail.industryType,
+        industryType: props.meetingDetail.industryType,
       };
       recordStatus.value = props.meetingDetail.recordStatus.toString() === '1';
       aiStatus.value = props.meetingDetail.aiStatus.toString() === '1';
