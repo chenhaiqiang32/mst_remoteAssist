@@ -1998,7 +1998,7 @@ export default class ThIM {
     /** 翻译消息的语言 */
     messageLanguage: string;
   }) {
-    console.log('AssistMeetingRealTimeMessageEvent---', data);
+    // console.log('AssistMeetingRealTimeMessageEvent---', data);
     const nowTime = Date.now();
     const dataContentReq: any = PB.AssistMeetingRealTimeMessageEvent.create(
       {
