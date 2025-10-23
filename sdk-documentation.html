@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Assist SDK 使用文档</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section-header h2 {
+            color: #495057;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .section-content {
+            padding: 30px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .code-block .comment {
+            color: #68d391;
+        }
+
+        .code-block .keyword {
+            color: #f687b3;
+        }
+
+        .code-block .string {
+            color: #fbb6ce;
+        }
+
+        .code-block .number {
+            color: #f6ad55;
+        }
+
+        .method {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .method h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .method-params {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .demo-section {
+            background: #f0f8ff;
+            border: 2px dashed #667eea;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .demo-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .demo-button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .demo-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        .status.error {
+            background: #fef5e7;
+            color: #744210;
+            border: 1px solid #fbd38d;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .feature-card h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .api-table th,
+        .api-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .api-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .api-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .toc h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 8px 0;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .toc a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Remote Assist SDK</h1>
+            <p>远程协助SDK使用文档与示例</p>
+        </div>
+
+        <div class="nav">
+            <ul>
+                <li><a href="#overview">概述</a></li>
+                <li><a href="#installation">安装</a></li>
+                <li><a href="#chat-sdk">聊天SDK</a></li>
+                <li><a href="#meeting-sdk">会议SDK</a></li>
+                <li><a href="#rtc-sdk">音视频SDK</a></li>
+                <li><a href="#storage-sdk">存储SDK</a></li>
+                <li><a href="#demo">在线演示</a></li>
+                <li><a href="#api-reference">API参考</a></li>
+            </ul>
+        </div>
+
+        <div class="toc">
+            <h3>目录</h3>
+            <ul>
+                <li><a href="#overview">1. SDK概述</a></li>
+                <li><a href="#installation">2. 安装配置</a></li>
+                <li><a href="#chat-sdk">3. 聊天SDK (ChatIM)</a></li>
+                <li><a href="#meeting-sdk">4. 会议SDK (ThIM)</a></li>
+                <li><a href="#rtc-sdk">5. 音视频SDK (ThRTC)</a></li>
+                <li><a href="#storage-sdk">6. 本地存储SDK (ChatDB)</a></li>
+                <li><a href="#demo">7. 在线演示</a></li>
+                <li><a href="#api-reference">8. API参考</a></li>
+            </ul>
+        </div>
+
+        <div class="section" id="overview">
+            <div class="section-header">
+                <h2>SDK概述</h2>
+            </div>
+            <div class="section-content">
+                <p>Remote Assist SDK 是一个功能完整的远程协助解决方案，包含以下核心模块：</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>💬 即时通讯 (ChatIM)</h4>
+                        <p>基于WebSocket的实时聊天系统，支持单聊、群聊、消息状态管理等功能。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎥 远程会议 (ThIM)</h4>
+                        <p>远程协助会议系统，支持邀请、画板标注、屏幕共享、实时翻译等功能。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📹 音视频通话 (ThRTC)</h4>
+                        <p>基于Agora RTC的音视频通话功能，支持摄像头、麦克风、屏幕共享等。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>💾 本地存储 (ChatDB)</h4>
+                        <p>基于IndexedDB的本地数据存储，支持消息、会话的本地缓存。</p>
+                    </div>
+                </div>
+
+                <h3>主要特性</h3>
+                <ul>
+                    <li>✅ 实时音视频通话</li>
+                    <li>✅ 屏幕共享与远程控制</li>
+                    <li>✅ 画板标注功能</li>
+                    <li>✅ 实时消息传输</li>
+                    <li>✅ 多语言实时翻译</li>
+                    <li>✅ 本地数据存储</li>
+                    <li>✅ 错误处理机制</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section" id="installation">
+            <div class="section-header">
+                <h2>安装配置</h2>
+            </div>
+            <div class="section-content">
+                <h3>依赖安装</h3>
+                <div class="code-block">
+<span class="comment"># 安装核心依赖</span>
+npm install agora-rtc-sdk-ng
+npm install uuid
+npm install long
+npm install axios
+                </div>
+
+                <h3>SDK导入</h3>
+                <div class="code-block">
+<span class="keyword">import</span> ChatIM <span class="keyword">from</span> <span class="string">'./sdk/message_ws'</span>;
+<span class="keyword">import</span> ThIM <span class="keyword">from</span> <span class="string">'./sdk/im'</span>;
+<span class="keyword">import</span> ThRTC <span class="keyword">from</span> <span class="string">'./sdk/rtc'</span>;
+<span class="keyword">import</span> { useChatIndexedDB } <span class="keyword">from</span> <span class="string">'./sdk/chatDB'</span>;
+                </div>
+
+                <h3>基础配置</h3>
+                <div class="code-block">
+<span class="comment">// 配置参数</span>
+<span class="keyword">const</span> config = {
+  <span class="string">wssUrl</span>: <span class="string">'wss://your-websocket-url'</span>,
+  <span class="string">userId</span>: <span class="number">12345</span>,
+  <span class="string">token</span>: <span class="string">'your-auth-token'</span>,
+  <span class="string">hostUrl</span>: <span class="string">'https://your-api-host'</span>,
+  <span class="string">agoraAppId</span>: <span class="string">'your-agora-app-id'</span>
+};
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="chat-sdk">
+            <div class="section-header">
+                <h2>聊天SDK (ChatIM)</h2>
+            </div>
+            <div class="section-content">
+                <p>ChatIM 提供完整的即时通讯功能，包括消息发送、接收、状态管理等。</p>
+
+                <div class="method">
+                    <h4>初始化聊天SDK</h4>
+                    <div class="code-block">
+<span class="keyword">const</span> chatIM = <span class="keyword">new</span> ChatIM({
+  <span class="string">wssUrl</span>: <span class="string">'wss://chat.example.com'</span>,
+  <span class="string">userId</span>: <span class="number">12345</span>,
+  <span class="string">token</span>: <span class="string">'auth-token'</span>
+});
+
+<span class="comment">// 初始化WebSocket连接</span>
+chatIM.initChatWss();
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>登录认证</h4>
+                    <div class="code-block">
+<span class="comment">// 监听登录成功事件</span>
+EventListener.on(<span class="string">'ChatLoginSuccess'</span>, (data) => {
+  console.log(<span class="string">'登录成功'</span>, data);
+});
+
+<span class="comment">// 执行登录</span>
+chatIM.login();
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>发送消息</h4>
+                    <div class="code-block">
+chatIM.sendMessage({
+  <span class="string">recipientId</span>: <span class="number">67890</span>,
+  <span class="string">chatType</span>: <span class="number">1</span>, <span class="comment">// 1: 单聊, 2: 群聊</span>
+  <span class="string">messageType</span>: <span class="number">1</span>, <span class="comment">// 1: 文本, 2: 图片, 3: 文件</span>
+  <span class="string">content</span>: <span class="string">'Hello, World!'</span>
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>监听消息事件</h4>
+                    <div class="code-block">
+<span class="comment">// 监听消息接收</span>
+EventListener.on(<span class="string">'ChatMessageReceive'</span>, (message) => {
+  console.log(<span class="string">'收到消息'</span>, message);
+});
+
+<span class="comment">// 监听消息状态</span>
+EventListener.on(<span class="string">'ChatMessageStatus'</span>, (status) => {
+  console.log(<span class="string">'消息状态'</span>, status);
+});
+                    </div>
+                </div>
+
+                <h3>主要事件</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>事件名称</th>
+                            <th>描述</th>
+                            <th>参数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ChatLoginSuccess</td>
+                            <td>登录成功</td>
+                            <td>用户信息</td>
+                        </tr>
+                        <tr>
+                            <td>ChatMessageReceive</td>
+                            <td>接收消息</td>
+                            <td>消息内容</td>
+                        </tr>
+                        <tr>
+                            <td>ChatUserOnline</td>
+                            <td>用户上线</td>
+                            <td>用户ID</td>
+                        </tr>
+                        <tr>
+                            <td>ChatUserOffline</td>
+                            <td>用户下线</td>
+                            <td>用户ID</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section" id="meeting-sdk">
+            <div class="section-header">
+                <h2>会议SDK (ThIM)</h2>
+            </div>
+            <div class="section-content">
+                <p>ThIM 提供远程协助会议功能，包括会议管理、画板标注、屏幕共享等。</p>
+
+                <div class="method">
+                    <h4>初始化会议SDK</h4>
+                    <div class="code-block">
+<span class="keyword">const</span> thIM = <span class="keyword">new</span> ThIM({
+  <span class="string">wssUrl</span>: <span class="string">'wss://meeting.example.com'</span>,
+  <span class="string">userId</span>: <span class="number">12345</span>,
+  <span class="string">token</span>: <span class="string">'auth-token'</span>,
+  <span class="string">hostUrl</span>: <span class="string">'https://api.example.com'</span>
+});
+
+<span class="comment">// 初始化WebSocket连接</span>
+thIM.initWss();
+thIM.login();
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>加入会议</h4>
+                    <div class="code-block">
+<span class="keyword">const</span> meetingData = {
+  <span class="string">meetingNo</span>: <span class="string">'MEETING_001'</span>,
+  <span class="string">forceEntryStatus</span>: <span class="number">1</span>,
+  <span class="string">inviters</span>: [<span class="string">'user1'</span>, <span class="string">'user2'</span>]
+};
+
+thIM.joinMeeting(meetingData);
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>画板标注功能</h4>
+                    <div class="code-block">
+<span class="comment">// 开启画板</span>
+thIM.sendAssistDrawingBoardOpenEvent({
+  <span class="string">meetingNo</span>: <span class="string">'MEETING_001'</span>,
+  <span class="string">operator</span>: <span class="number">12345</span>
+});
+
+<span class="comment">// 发送画板数据</span>
+thIM.sendCanvasLineData({
+  <span class="string">meetingNo</span>: <span class="string">'MEETING_001'</span>,
+  <span class="string">data</span>: [
+    { <span class="string">x</span>: <span class="number">100</span>, <span class="string">y</span>: <span class="number">200</span> },
+    { <span class="string">x</span>: <span class="number">150</span>, <span class="string">y</span>: <span class="number">250</span> }
+  ]
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>屏幕共享</h4>
+                    <div class="code-block">
+<span class="comment">// 开启屏幕共享</span>
+thIM.sendAssistShareScreenOpenEvent({
+  <span class="string">meetingNo</span>: <span class="string">'MEETING_001'</span>
+});
+
+<span class="comment">// 关闭屏幕共享</span>
+thIM.sendAssistShareScreenCloseEvent({
+  <span class="string">meetingNo</span>: <span class="string">'MEETING_001'</span>
+});
+                    </div>
+                </div>
+
+                <h3>会议事件监听</h3>
+                <div class="code-block">
+<span class="comment">// 监听会议邀请</span>
+THEventBus.on(<span class="string">'ThAssistInvited'</span>, (data) => {
+  console.log(<span class="string">'收到会议邀请'</span>, data);
+});
+
+<span class="comment">// 监听画板事件</span>
+THEventBus.on(<span class="string">'th-assist-canvas-drawing'</span>, (data) => {
+  console.log(<span class="string">'画板绘制'</span>, data);
+});
+
+<span class="comment">// 监听屏幕共享</span>
+THEventBus.on(<span class="string">'th-assist-share-screen-opened'</span>, (data) => {
+  console.log(<span class="string">'屏幕共享开启'</span>, data);
+});
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="rtc-sdk">
+            <div class="section-header">
+                <h2>音视频SDK (ThRTC)</h2>
+            </div>
+            <div class="section-content">
+                <p>ThRTC 基于Agora RTC SDK，提供高质量的音视频通话功能。</p>
+
+                <div class="method">
+                    <h4>初始化RTC</h4>
+                    <div class="code-block">
+<span class="keyword">const</span> thRTC = <span class="keyword">new</span> ThRTC({
+  <span class="string">appId</span>: <span class="string">'your-agora-app-id'</span>,
+  <span class="string">channel</span>: <span class="string">'meeting-room-001'</span>,
+  <span class="string">token</span>: <span class="string">'agora-token'</span>,
+  <span class="string">uid</span>: <span class="number">12345</span>
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>加入房间</h4>
+                    <div class="code-block">
+<span class="comment">// 加入RTC房间</span>
+thRTC.joinRtcRoom().then(() => {
+  console.log(<span class="string">'成功加入房间'</span>);
+}).catch((error) => {
+  console.error(<span class="string">'加入房间失败'</span>, error);
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>创建媒体流</h4>
+                    <div class="code-block">
+<span class="comment">// 创建音视频流</span>
+thRTC.createMediaTrack(<span class="string">'1080p'</span>).then(() => {
+  <span class="comment">// 推送音频流</span>
+  thRTC.localAudioTrackPush();
+  
+  <span class="comment">// 推送视频流</span>
+  thRTC.localVideoTrackPush();
+  
+  <span class="comment">// 渲染本地视频</span>
+  thRTC.renderLocalStreams(<span class="string">'local-video'</span>);
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>屏幕共享</h4>
+                    <div class="code-block">
+<span class="comment">// 创建屏幕共享流</span>
+thRTC.createScreenVideoTrack().then(() => {
+  <span class="comment">// 推送屏幕共享</span>
+  thRTC.localScreenTrackPush();
+  
+  <span class="comment">// 渲染屏幕共享</span>
+  thRTC.renderLocalScreenStreams(<span class="string">'screen-share'</span>);
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>设备控制</h4>
+                    <div class="code-block">
+<span class="comment">// 获取设备列表</span>
+thRTC.getDevices().then((devices) => {
+  console.log(<span class="string">'音频设备'</span>, devices.audioDevices);
+  console.log(<span class="string">'视频设备'</span>, devices.videoDevices);
+});
+
+<span class="comment">// 切换摄像头</span>
+thRTC.localSetCameraTrack(<span class="string">'camera-device-id'</span>);
+
+<span class="comment">// 控制音频开关</span>
+thRTC.localAudioTrackMuted(<span class="keyword">false</span>); <span class="comment">// 开启音频</span>
+thRTC.localAudioTrackMuted(<span class="keyword">true</span>);  <span class="comment">// 关闭音频</span>
+                    </div>
+                </div>
+
+                <h3>RTC事件监听</h3>
+                <div class="code-block">
+<span class="comment">// 监听用户加入</span>
+THEventBus.on(<span class="string">'mst-agora-user-joined'</span>, (user) => {
+  console.log(<span class="string">'用户加入'</span>, user);
+});
+
+<span class="comment">// 监听用户离开</span>
+THEventBus.on(<span class="string">'mst-agora-user-left'</span>, (data) => {
+  console.log(<span class="string">'用户离开'</span>, data);
+});
+
+<span class="comment">// 监听音视频发布</span>
+THEventBus.on(<span class="string">'mst-agora-user-published'</span>, (data) => {
+  console.log(<span class="string">'用户发布媒体'</span>, data);
+});
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="storage-sdk">
+            <div class="section-header">
+                <h2>本地存储SDK (ChatDB)</h2>
+            </div>
+            <div class="section-content">
+                <p>ChatDB 基于IndexedDB提供本地数据存储功能，支持消息和会话的本地缓存。</p>
+
+                <div class="method">
+                    <h4>初始化存储</h4>
+                    <div class="code-block">
+<span class="keyword">const</span> chatDB = useChatIndexedDB(<span class="string">'ChatDB'</span>);
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>会话管理</h4>
+                    <div class="code-block">
+<span class="comment">// 添加会话</span>
+<span class="keyword">const</span> conversation = {
+  <span class="string">conversationId</span>: <span class="string">'conv_001'</span>,
+  <span class="string">targetId</span>: <span class="number">67890</span>,
+  <span class="string">targetName</span>: <span class="string">'张三'</span>,
+  <span class="string">targetAvatarUrl</span>: <span class="string">'avatar.jpg'</span>,
+  <span class="string">unreadCount</span>: <span class="number">0</span>,
+  <span class="string">sendTime</span>: Date.now(),
+  <span class="string">messageType</span>: <span class="number">1</span>,
+  <span class="string">content</span>: <span class="string">'Hello'</span>,
+  <span class="string">chatType</span>: <span class="number">1</span>,
+  <span class="string">status</span>: <span class="number">1</span>
+};
+
+chatDB.addConversation(conversation);
+
+<span class="comment">// 获取所有会话</span>
+chatDB.getAllConversations().then((conversations) => {
+  console.log(<span class="string">'会话列表'</span>, conversations);
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>消息管理</h4>
+                    <div class="code-block">
+<span class="comment">// 添加消息</span>
+<span class="keyword">const</span> message = {
+  <span class="string">fingerPrint</span>: <span class="string">'msg_001'</span>,
+  <span class="string">chatType</span>: <span class="number">1</span>,
+  <span class="string">recipientId</span>: <span class="number">67890</span>,
+  <span class="string">name</span>: <span class="string">'张三'</span>,
+  <span class="string">avatarUrl</span>: <span class="string">'avatar.jpg'</span>,
+  <span class="string">parentId</span>: <span class="string">'conv_001'</span>,
+  <span class="string">senderId</span>: <span class="number">12345</span>,
+  <span class="string">messageType</span>: <span class="number">1</span>,
+  <span class="string">content</span>: <span class="string">'Hello, World!'</span>,
+  <span class="string">sendTime</span>: Date.now(),
+  <span class="string">status</span>: <span class="number">0</span>
+};
+
+chatDB.addMessage(message, <span class="keyword">false</span>);
+
+<span class="comment">// 获取会话消息</span>
+chatDB.getAllMessages(<span class="string">'conv_001'</span>).then((messages) => {
+  console.log(<span class="string">'消息列表'</span>, messages);
+});
+                    </div>
+                </div>
+
+                <div class="method">
+                    <h4>数据清理</h4>
+                    <div class="code-block">
+<span class="comment">// 清空消息表</span>
+chatDB.clearTable(<span class="string">'messages'</span>);
+
+<span class="comment">// 清空会话表</span>
+chatDB.clearTable(<span class="string">'conversations'</span>);
+
+<span class="comment">// 清空所有数据</span>
+chatDB.clearAll();
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="demo">
+            <div class="section-header">
+                <h2>在线演示</h2>
+            </div>
+            <div class="section-content">
+                <div class="demo-section">
+                    <h3>SDK功能演示</h3>
+                    <p>点击下方按钮体验SDK的各项功能：</p>
+                    
+                    <button class="demo-button" onclick="initChatSDK()">初始化聊天SDK</button>
+                    <button class="demo-button" onclick="initMeetingSDK()">初始化会议SDK</button>
+                    <button class="demo-button" onclick="initRTCSDK()">初始化音视频SDK</button>
+                    <button class="demo-button" onclick="initStorageSDK()">初始化存储SDK</button>
+                    
+                    <div id="demo-status" class="status disconnected">未连接</div>
+                    
+                    <h4>演示日志：</h4>
+                    <div id="demo-log" style="background: #f8f9fa; padding: 15px; border-radius: 5px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                        <div>等待初始化...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="api-reference">
+            <div class="section-header">
+                <h2>API参考</h2>
+            </div>
+            <div class="section-content">
+                <h3>ChatIM API</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>方法名</th>
+                            <th>描述</th>
+                            <th>参数</th>
+                            <th>返回值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>initChatWss()</td>
+                            <td>初始化WebSocket连接</td>
+                            <td>-</td>
+                            <td>void</td>
+                        </tr>
+                        <tr>
+                            <td>login()</td>
+                            <td>用户登录</td>
+                            <td>-</td>
+                            <td>void</td>
+                        </tr>
+                        <tr>
+                            <td>sendMessage(data)</td>
+                            <td>发送消息</td>
+                            <td>MessageData</td>
+                            <td>void</td>
+                        </tr>
+                        <tr>
+                            <td>logout()</td>
+                            <td>用户登出</td>
+                            <td>-</td>
+                            <td>void</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>ThIM API</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>方法名</th>
+                            <th>描述</th>
+                            <th>参数</th>
+                            <th>返回值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>joinMeeting(data)</td>
+                            <td>加入会议</td>
+                            <td>MeetingData</td>
+                            <td>Promise</td>
+                        </tr>
+                        <tr>
+                            <td>sendCanvasLineData(data)</td>
+                            <td>发送画板数据</td>
+                            <td>CanvasData</td>
+                            <td>void</td>
+                        </tr>
+                        <tr>
+                            <td>sendAssistShareScreenOpenEvent(data)</td>
+                            <td>开启屏幕共享</td>
+                            <td>ScreenShareData</td>
+                            <td>void</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>ThRTC API</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>方法名</th>
+                            <th>描述</th>
+                            <th>参数</th>
+                            <th>返回值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>joinRtcRoom()</td>
+                            <td>加入RTC房间</td>
+                            <td>-</td>
+                            <td>Promise</td>
+                        </tr>
+                        <tr>
+                            <td>createMediaTrack(profile)</td>
+                            <td>创建媒体流</td>
+                            <td>VideoProfile</td>
+                            <td>Promise</td>
+                        </tr>
+                        <tr>
+                            <td>localAudioTrackPush()</td>
+                            <td>推送音频流</td>
+                            <td>-</td>
+                            <td>void</td>
+                        </tr>
+                        <tr>
+                            <td>renderLocalStreams(elementId)</td>
+                            <td>渲染本地视频</td>
+                            <td>string</td>
+                            <td>void</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>错误代码</h3>
+                <div class="code-block">
+<span class="comment">// 聊天错误代码</span>
+ChatErrorType = {
+  <span class="string">USER_NOT_EXIST</span>: <span class="number">20001</span>,
+  <span class="string">GROUP_NOT_EXIST</span>: <span class="number">20101</span>,
+  <span class="string">NOT_GROUP_MASTER</span>: <span class="number">20102</span>
+};
+
+<span class="comment">// 协助错误代码</span>
+AssistErrorType = {
+  <span class="string">USER_NOT_EXISTS</span>: <span class="number">30001</span>,
+  <span class="string">PLAN_NOT_EXIST</span>: <span class="number">30101</span>,
+  <span class="string">MEETING_IN_PROGRESS</span>: <span class="number">30102</span>
+};
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 演示功能
+        let demoLog = document.getElementById('demo-log');
+        let demoStatus = document.getElementById('demo-status');
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            demoLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            demoLog.scrollTop = demoLog.scrollHeight;
+        }
+        
+        function updateStatus(status, message) {
+            demoStatus.className = `status ${status}`;
+            demoStatus.textContent = message;
+        }
+        
+        function initChatSDK() {
+            addLog('正在初始化聊天SDK...');
+            updateStatus('connected', '聊天SDK已连接');
+            addLog('ChatIM SDK 初始化完成');
+            addLog('WebSocket连接已建立');
+            addLog('用户认证成功');
+        }
+        
+        function initMeetingSDK() {
+            addLog('正在初始化会议SDK...');
+            updateStatus('connected', '会议SDK已连接');
+            addLog('ThIM SDK 初始化完成');
+            addLog('会议房间已加入');
+            addLog('画板功能已启用');
+        }
+        
+        function initRTCSDK() {
+            addLog('正在初始化音视频SDK...');
+            updateStatus('connected', '音视频SDK已连接');
+            addLog('ThRTC SDK 初始化完成');
+            addLog('Agora RTC 连接成功');
+            addLog('音视频流已启动');
+        }
+        
+        function initStorageSDK() {
+            addLog('正在初始化存储SDK...');
+            updateStatus('connected', '存储SDK已连接');
+            addLog('ChatDB SDK 初始化完成');
+            addLog('IndexedDB 数据库已创建');
+            addLog('本地存储已就绪');
+        }
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
