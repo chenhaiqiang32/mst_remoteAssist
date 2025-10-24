@@ -550,6 +550,15 @@
   const audioDataArray: any = ref([]);
   const transLanguages: any = ref([]);
   const isTransWssOpen: any = ref(false);
+  
+  // WebSocket 重连相关状态
+  const transWssReconnectAttempts = ref(0); // 当前重连尝试次数
+  const transWssMaxReconnectAttempts = ref(5); // 最大重连次数
+  const transWssReconnectDelay = ref(1000); // 初始重连延迟时间(ms)
+  const transWssMaxReconnectDelay = ref(30000); // 最大重连延迟时间(ms)
+  const transWssReconnectTimer: any = ref(null); // 重连定时器
+  const transWssIsReconnecting = ref(false); // 是否正在重连中
+  const transWssManualClose = ref(false); // 是否手动关闭连接
 
   const sceneMenuRef: any = ref();
   const selfMenuRef: any = ref();
@@ -927,6 +936,8 @@ function sendRunTask(dataObj?: any) {
   const handleTransWssOpen = () => {
     console.log('trans-wss-open');
     isTransWssOpen.value = true;
+    // 连接成功时重置重连状态
+    handleResetTransWssReconnect();
   };
   function sendAudioStream(dataOb:any) {
     // eslint-disable-next-line no-use-before-define
@@ -1052,9 +1063,69 @@ function sendRunTask(dataObj?: any) {
       }
     }
   };
+  /**
+   * WebSocket 重连逻辑
+   */
+  const handleTransWssReconnect = () => {
+    if (transWssManualClose.value || transWssIsReconnecting.value) {
+      return;
+    }
+
+    if (transWssReconnectAttempts.value >= transWssMaxReconnectAttempts.value) {
+      console.error('WebSocket 重连次数已达上限，停止重连');
+      return;
+    }
+
+    transWssIsReconnecting.value = true;
+    transWssReconnectAttempts.value++;
+
+    // 计算重连延迟时间（指数退避算法）
+    const delay = Math.min(
+      transWssReconnectDelay.value * Math.pow(2, transWssReconnectAttempts.value - 1),
+      transWssMaxReconnectDelay.value
+    );
+
+    console.log(`WebSocket 将在 ${delay}ms 后进行第 ${transWssReconnectAttempts.value} 次重连`);
+
+    transWssReconnectTimer.value = setTimeout(() => {
+      transWssIsReconnecting.value = false;
+      handleInitTransLanguage();
+    }, delay);
+  };
+
+  /**
+   * 重置重连状态
+   */
+  const handleResetTransWssReconnect = () => {
+    transWssReconnectAttempts.value = 0;
+    transWssIsReconnecting.value = false;
+    transWssManualClose.value = false;
+    if (transWssReconnectTimer.value) {
+      clearTimeout(transWssReconnectTimer.value);
+      transWssReconnectTimer.value = null;
+    }
+  };
+
+  /**
+   * 停止重连
+   */
+  const handleStopTransWssReconnect = () => {
+    transWssManualClose.value = true;
+    transWssIsReconnecting.value = false;
+    if (transWssReconnectTimer.value) {
+      clearTimeout(transWssReconnectTimer.value);
+      transWssReconnectTimer.value = null;
+    }
+  };
+
   const handleTransWssClose = (err: any) => {
     console.log('handleTransWssClose', err);
     isTransWssOpen.value = false;
+    
+    // 如果不是手动关闭，则尝试重连
+    if (!transWssManualClose.value) {
+      handleTransWssReconnect();
+    }
   };
   const handleMonitorTransWssRtc = () => {
     transWss.value?.addEventListener('open', handleTransWssOpen);
@@ -1114,6 +1185,8 @@ const handleTransInterval = (dataOb: any) => {
   };
   const handleMstRtcAgoraAudioTrackClose = async () => {
     console.log('翻译转换关闭');
+    // 停止重连机制
+    handleStopTransWssReconnect();
     handleClearTransWssMonitor();
     transWss.value?.close();
     transWss.value = null;
@@ -1128,9 +1201,17 @@ const handleTransInterval = (dataOb: any) => {
       // transWssInfo.value.escaping === '1' &&
       transWssInfo.value.url
     ) {
-      transWss.value = new WebSocket(transWssInfo.value.url);
-      handleMonitorTransWssRtc();
-      handleStartAudioFrameCallback();
+      try {
+        transWss.value = new WebSocket(transWssInfo.value.url);
+        handleMonitorTransWssRtc();
+        handleStartAudioFrameCallback();
+      } catch (error) {
+        console.error('WebSocket 连接失败:', error);
+        // 连接失败时也尝试重连
+        if (!transWssManualClose.value) {
+          handleTransWssReconnect();
+        }
+      }
     } else {
       handleMstRtcAgoraAudioTrackClose();
     }
@@ -4291,6 +4372,8 @@ const handleTransInterval = (dataOb: any) => {
     handleClearMonitorNodeEvent();
     handleClearMonitorThRtcClientEvent();
     handleMstRtcAgoraAudioTrackClose();
+    // 清理重连定时器
+    handleStopTransWssReconnect();
     transWssInfo.value = {
       url: '',
       translateVendor: '',
