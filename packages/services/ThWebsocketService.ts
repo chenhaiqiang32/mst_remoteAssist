@@ -7,13 +7,21 @@ class WebSocketService {
 
   public isConnected = false;
 
+  private reconnectAttempts = 0;
+
+  private maxReconnectAttempts = 5;
+
+  private reconnectInterval = 3000; // 3秒
+
+  private reconnectTimer: NodeJS.Timeout | null = null;
+
   constructor(wsUrl: string) {
     this.wsUrl = wsUrl;
     this.addNetworkListeners();
   }
 
   public connect() {
-    if (this.websocket) {
+    if (this.websocket && this.isConnected) {
       return;
     }
 
@@ -25,9 +33,34 @@ class WebSocketService {
     this.websocket.addEventListener('error', this.onError.bind(this));
   }
 
+  private reconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('WebSocket 重连次数已达上限，停止重连');
+      return;
+    }
+
+    this.reconnectAttempts += 1;
+    console.log(
+      `WebSocket 重连尝试 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`
+    );
+
+    this.reconnectTimer = setTimeout(() => {
+      this.connect();
+    }, this.reconnectInterval);
+  }
+
+  private clearReconnectTimer() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
   private onOpen() {
     console.log('远程协助-WebSocket connection opened');
     this.isConnected = true;
+    this.reconnectAttempts = 0; // 重置重连计数
+    this.clearReconnectTimer(); // 清除重连定时器
     THEventBus.emit('ThWsOpen');
   }
 
@@ -41,12 +74,23 @@ class WebSocketService {
       `TH-WebSocket connection closed with code: ${event.code}`,
       this
     );
+    this.isConnected = false;
+    this.websocket = null;
     THEventBus.emit('ThWsClose');
+
+    // 如果不是主动关闭，则尝试重连
+    if (event.code !== 1000) {
+      this.reconnect();
+    }
   }
 
   private onError(error: any) {
     console.error('TH-WebSocket error', error, this);
+    this.isConnected = false;
     THEventBus.emit('ThWsError');
+
+    // 发生错误时尝试重连
+    this.reconnect();
   }
 
   public sendMessage(message: any) {
@@ -56,10 +100,12 @@ class WebSocketService {
   }
 
   public close() {
+    this.clearReconnectTimer(); // 清除重连定时器
     if (this.websocket) {
       this.websocket?.close();
       this.websocket = null;
     }
+    this.isConnected = false;
   }
 
   // 监听网络变化

@@ -363,9 +363,7 @@ export default class ThIM {
         master: Long.fromValue(dataContent.master).toNumber(),
       });
     }
-    if (
-      PB.EventType.ASSIST_VIDEO_RESOLUTION_UPDATED === proContent.type
-    ) {
+    if (PB.EventType.ASSIST_VIDEO_RESOLUTION_UPDATED === proContent.type) {
       const dataContent = PB.AssistVideoResolutionUpdatedEvent.decode(
         proContent.event
       );
@@ -691,9 +689,7 @@ export default class ThIM {
       });
     }
     //  todo 会议成员设置语言
-    if (
-      PB.EventType.ASSIST_MEMBER_LANGUAGE_UPDATED === proContent.type
-    ) {
+    if (PB.EventType.ASSIST_MEMBER_LANGUAGE_UPDATED === proContent.type) {
       const dataContent = PB.AssistMemberLanguageUpdatedEvent.decode(
         proContent.event
       );
@@ -713,9 +709,7 @@ export default class ThIM {
       // });
     }
     //  todo 会议成员翻译
-    if (
-      PB.EventType.ASSIST_MEETING_REAL_TIME_MESSAGED === proContent.type
-    ) {
+    if (PB.EventType.ASSIST_MEETING_REAL_TIME_MESSAGED === proContent.type) {
       const dataContent = PB.AssistMeetingRealTimeMessagedEvent.decode(
         proContent.event
       );
@@ -800,11 +794,13 @@ export default class ThIM {
   public handleThWsError() {
     this.clearHeartInterval();
     console.error('ThWebSocket 发生错误');
+    // WebSocket 服务会自动重连，这里不需要额外处理
   }
 
   private handleThWsClose(data: any) {
     console.log('ThWebSocket 连接已关闭', data, this);
     this.clearHeartInterval();
+    // WebSocket 服务会自动重连，这里不需要额外处理
     // THEventBus.emit('ThAssistImWsClose', 'THWebSocket connection closed');
   }
 
@@ -995,7 +991,10 @@ export default class ThIM {
   public changeLanguageAndIndustryType(params: any) {
     return new Promise((resolve, reject) => {
       axios
-        .post(`${this.hostUrl}/api/meeting/meeting/changeLanguageAndIndustryType`, params)
+        .post(
+          `${this.hostUrl}/api/meeting/meeting/changeLanguageAndIndustryType`,
+          params
+        )
         .then((response: any) => {
           resolve(response);
         })
@@ -1004,6 +1003,7 @@ export default class ThIM {
         });
     });
   }
+
   // 发送协助邀请同意事件
   private sendAssistInviteeAcceptEvent(data: {
     meetingNo: string;
@@ -1962,18 +1962,16 @@ export default class ThIM {
     this.webSocketService?.sendMessage(enProtocol);
   }
 
-  //// todo【客户端发送服务端】会议成员设置语言
+  // todo【客户端发送服务端】会议成员设置语言
   public assistMemberLanguageUpdate(data: {
     meetingNo: string;
     language: string;
   }) {
     console.log('AssistMemberLanguageUpdateEvent---', data);
     const nowTime = Date.now();
-    const dataContentReq: any = PB.AssistMemberLanguageUpdateEvent.create(
-      {
-        ...data,
-      }
-    );
+    const dataContentReq: any = PB.AssistMemberLanguageUpdateEvent.create({
+      ...data,
+    });
     const enContent =
       PB.AssistMemberLanguageUpdateEvent.encode(dataContentReq).finish();
     const PBProtocol: any = PB.Protocol.create({
@@ -1986,8 +1984,7 @@ export default class ThIM {
     this.webSocketService?.sendMessage(enProtocol);
   }
 
-
-  //// todo【客户端发送服务端】实时翻译消息
+  // todo【客户端发送服务端】实时翻译消息
   public assistMeetingRealTimeMessage(data: {
     /** 会议号 */
     meetingNo: string;
@@ -2000,11 +1997,9 @@ export default class ThIM {
   }) {
     // console.log('AssistMeetingRealTimeMessageEvent---', data);
     const nowTime = Date.now();
-    const dataContentReq: any = PB.AssistMeetingRealTimeMessageEvent.create(
-      {
-        ...data,
-      }
-    );
+    const dataContentReq: any = PB.AssistMeetingRealTimeMessageEvent.create({
+      ...data,
+    });
     const enContent =
       PB.AssistMeetingRealTimeMessageEvent.encode(dataContentReq).finish();
     const PBProtocol: any = PB.Protocol.create({
