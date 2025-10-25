@@ -171,4 +171,5 @@ export default {
   'mst.scene.is.tip': '正在对',
   'mst.scene.view.mark.flash': '的画面进行闪点标注',
   'mst.scene.trans': '语音翻译',
+  'mst.menu.lcxf': '流程下发',
 };

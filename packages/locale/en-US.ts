@@ -187,4 +187,5 @@ export default {
   'mst.scene.is.tip': "It's right",
   'mst.scene.view.mark.flash': 'The flash point is marked',
   'mst.scene.trans': 'Voice translation',
+  'mst.menu.lcxf': 'Distribution',
 };

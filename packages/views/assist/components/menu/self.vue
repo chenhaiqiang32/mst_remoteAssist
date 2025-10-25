@@ -342,7 +342,7 @@ import xxIcon from '../../assets/icons/icon_message.png';
     status: ThMeetingStore.allAudioDisable,
   });
   const lcxfMenu = ref({
-    label: '流程下发',
+    label: t('mst.menu.lcxf'),
     icon: xiafaIcon,
     activeIcon: xiafaIcon,
     status: 0,
