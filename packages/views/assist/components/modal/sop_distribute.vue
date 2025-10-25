@@ -5,17 +5,17 @@
         <img :src="closeIcon" alt="" />
       </div>
       <div class="sop-distribute-m-t">
-        <span>流程下发</span>
+        <span>{{ t('mst.sop.distribute.title') }}</span>
       </div>
       <div class="sop-distribute-m-content">
         <div class="sop-distribute-m-item">
           <div class="sop-distribute-m-item-label">
-            <span>选择流程</span>
+            <span>{{ t('mst.sop.distribute.select.process') }}</span>
           </div>
           <a-select
             v-model="selectedSop"
             class="sop-distribute-select"
-            placeholder="请选择流程"
+            :placeholder="t('mst.sop.distribute.select.process.placeholder')"
             :loading="sopListLoading"
           >
             <a-option
@@ -30,12 +30,12 @@
         </div>
         <div class="sop-distribute-m-item">
           <div class="sop-distribute-m-item-label">
-            <span>选择人员</span>
+            <span>{{ t('mst.sop.distribute.select.executors') }}</span>
           </div>
           <a-select
             v-model="selectedExecutors"
             class="sop-distribute-select"
-            placeholder="请选择人员"
+            :placeholder="t('mst.sop.distribute.select.executors.placeholder')"
             multiple
             :max-tag-count="2"
           >
@@ -52,14 +52,14 @@
       </div>
       <div class="sop-distribute-m-footer">
         <div class="sop-distribute-btn btn-cancel" @click="handleClose">
-          <span>取消</span>
+          <span>{{ t('mst.modal.cancel') }}</span>
         </div>
         <div
           class="sop-distribute-btn btn-primary"
           :class="{ disabled: !canSubmit }"
           @click="handleDistribute"
         >
-          <span>下发</span>
+          <span>{{ t('mst.sop.distribute.distribute') }}</span>
         </div>
       </div>
     </div>
@@ -73,9 +73,11 @@
   import useThMeetingStore from '../../../../store';
   import closeIcon from '../../assets/icons/icon_close.png';
   import msg from '../../../../services/msg';
+  import i18n from '../../../../locale/index';
 
   const emit = defineEmits(['handleClose']);
   const ThMeetingStore = useThMeetingStore();
+  const { t } = i18n.global;
 
   const selectedSop = ref<number | undefined>();
   const selectedExecutors = ref<number[]>([]);
@@ -104,11 +106,11 @@
       if (res.code === 200) {
         sopList.value = res.data || [];
       } else {
-        msg.error(res.msg || '获取流程列表失败');
+        msg.error(res.msg || t('mst.sop.distribute.error.fetch'));
       }
     } catch (error) {
       console.error('获取流程列表失败:', error);
-      msg.error('获取流程列表失败');
+      msg.error(t('mst.sop.distribute.error.fetch'));
     } finally {
       sopListLoading.value = false;
     }
@@ -122,7 +124,7 @@
       (item) => item.sopId === selectedSop.value
     );
     if (!selectedSopInfo) {
-      msg.error('请选择流程');
+      msg.error(t('mst.sop.distribute.error.select'));
       return;
     }
 
@@ -145,14 +147,14 @@
 
       const res = await distributeSop(params);
       if (res.code === 200) {
-        msg.success('流程下发成功');
+        msg.success(t('mst.sop.distribute.success'));
         handleClose();
       } else {
-        msg.error(res.msg || '流程下发失败');
+        msg.error(res.msg || t('mst.sop.distribute.error'));
       }
     } catch (error) {
       console.error('流程下发失败:', error);
-      msg.error('流程下发失败');
+      msg.error(t('mst.sop.distribute.error'));
     }
   };
 
