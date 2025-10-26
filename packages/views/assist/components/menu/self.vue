@@ -404,7 +404,7 @@ import xxIcon from '../../assets/icons/icon_message.png';
     align-items: center;
     justify-content: center;
     .self-menu-item {
-      width: 68px;
+      width: 76px;
       height: 66px;
       display: flex;
       flex-direction: column;
