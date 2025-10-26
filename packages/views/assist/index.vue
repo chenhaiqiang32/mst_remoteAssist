@@ -623,7 +623,7 @@
 
   const mapperLanguage = computed(() => {
     const result = meetingStore.languageList.reduce((acc, item) => {
-      acc[item.label] = item.local || item.value;
+      acc[item.label] = item.value || item.local;
       return acc;
     }, {});
     const languageType = ThMeetingStore.roomTranslateInfo?.languageType;
