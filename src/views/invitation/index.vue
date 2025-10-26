@@ -14,9 +14,9 @@
           <img src="@/assets/invitation/Polygon.png" alt="" />
         </div>
       </div>
-      <div class="top_m">
+      <!-- <div class="top_m">
         <img src="@/assets/invitation/logo1.png" alt="" />
-      </div>
+      </div> -->
       <div class="top_i"></div>
     </div>
 
@@ -25,7 +25,7 @@
         <img src="@/assets/invitation/icon_qrCode.png" alt="" />
       </div>
       <div class="main_t">
-        <img src="@/assets/invitation/logo2.png" alt="" />
+        <img alt="logo" src="@/assets/images/logo.png" />
       </div>
       <div class="main_tt">
         <span class="meetingName">{{ detailData?.meetingName || '' }}</span>
@@ -74,7 +74,7 @@
           </div>
           <div class="main_mmi"></div>
         </div>
-        <div class="main_mi">
+        <div v-if="detailData?.planType !== 2" class="main_mi">
           <div class="main_mit">
             <span class="endTime">{{
               detailData?.endTime
@@ -86,6 +86,11 @@
             <span class="endDate">{{
               detailData?.endTime ? formatDate(detailData.endTime) : ''
             }}</span>
+          </div>
+        </div>
+        <div v-else class="main_mi">
+          <div class="main_mit">
+            <span class="duration">--</span>
           </div>
         </div>
       </div>

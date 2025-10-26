@@ -32,7 +32,7 @@ export interface JoinMeetingRes {
  */
 export function getMeetingDetailByToken(token: string) {
   return axios.get<{ code: number; msg: string; data: MeetingDetailRes }>(
-    `api/meeting/plan/share/detailByToken/${token}`
+    `/api/meeting/plan/share/detailByToken/${token}`
   );
 }
 
@@ -42,5 +42,5 @@ export function getMeetingDetailByToken(token: string) {
  * @returns Promise<JoinMeetingRes>
  */
 export function joinMeeting(data: JoinMeetingData) {
-  return axios.post<JoinMeetingRes>('api/meeting/plan/share/joinMeeting', data);
+  return axios.post<JoinMeetingRes>('/api/meeting/plan/share/joinMeeting', data);
 }
