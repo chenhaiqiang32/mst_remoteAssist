@@ -421,24 +421,47 @@
     if (!meetingNo) return;
 
     try {
-      if (navigator.userAgent.match(/android/i)) {
-        // Android WebView 处理
-        if (window.WebViewJavascriptBridge) {
-          window.WebViewJavascriptBridge.callHandler(
-            'writeToClipboard',
-            meetingNo,
-            (responseData: any) => {
-              console.log('writeToClipboard-responseData', responseData);
-              Message.success(`${langData.value.t16}: ${meetingNo}`);
-            }
-          );
+      // Android WebView 特殊处理
+      if (navigator.userAgent.match(/android/i) && window.WebViewJavascriptBridge) {
+        window.WebViewJavascriptBridge.callHandler(
+          'writeToClipboard',
+          meetingNo,
+          (responseData: any) => {
+            console.log('writeToClipboard-responseData', responseData);
+            Message.success(`${langData.value.t16}: ${meetingNo}`);
+          }
+        );
+        return;
+      }
+
+      // 现代浏览器 Clipboard API（需要 HTTPS 或 localhost）
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(meetingNo);
+          Message.success(`${langData.value.t16}: ${meetingNo}`);
+          return;
+        } catch (clipboardError) {
+          console.log('Clipboard API failed, trying fallback');
+        }
+      }
+
+      // 降级方案：使用 input 元素复制
+      const input = document.getElementById('MeetingNoValue') as HTMLInputElement;
+      if (input) {
+        input.style.display = 'block';
+        input.select();
+        input.setSelectionRange(0, 99999); // 移动端支持
+        
+        const successful = document.execCommand('copy');
+        input.style.display = 'none';
+        
+        if (successful) {
+          Message.success(`${langData.value.t16}: ${meetingNo}`);
         } else {
-          Message.error(langData.value.t17);
+          throw new Error('execCommand failed');
         }
       } else {
-        // 普通浏览器处理
-        await navigator.clipboard.writeText(meetingNo);
-        Message.success(`${langData.value.t16}: ${meetingNo}`);
+        throw new Error('Input element not found');
       }
     } catch (error) {
       console.error('复制失败:', error);
