@@ -165,7 +165,7 @@
   import meetingVue from './components/list.vue';
   import useThMeetingStore from '../../../packages/store';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const meetingStore = useMeetingStore();
   const ThMeetingStore = useThMeetingStore();
 
@@ -191,8 +191,11 @@
     callRoomOptionsVisible.value = true;
     console.log('handleOptionCallOpen', callRoomOptionsVisible.value);
     meetingStore.updateRoomInvitePsn(null);
+    const meetingName = locale.value === 'en-US' 
+      ? `${t('meeting.room.option.meetingName')} Of ${userStore.name}`
+      : `${userStore.name} ${t('meeting.room.option.meetingName')}`;
     meetingStore.updateRoomOptions({
-      meetingName: `${userStore.name} ${t('meeting.room.option.meetingName')}`,
+      meetingName,
       video: false,
       audio: true,
       loudspeaker: true,
