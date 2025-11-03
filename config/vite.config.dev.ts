@@ -13,7 +13,7 @@ export default mergeConfig(
       },
       proxy: {
         '/api': {
-          target: 'https://63.178.128.115:9012', // 后台服务器地址
+          target: 'https://192.168.1.88:9012', // 后台服务器地址
           changeOrigin: true, // 是否允许不同源
           secure: false, // 支持https
           rewrite: (path: any) => path.replace(/^\/api/, '/api'),

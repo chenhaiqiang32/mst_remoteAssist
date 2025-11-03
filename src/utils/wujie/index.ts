@@ -27,7 +27,8 @@ export function getSocketHost() {
   const isLocal =
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('192.168.1.102') ||
     window.location.hostname.includes('192.168.1.88');
 
-  return isLocal ? '63.178.128.115:9012' : window.location.host;
+  return isLocal ? '192.168.1.88:9010' : window.location.host;
 }

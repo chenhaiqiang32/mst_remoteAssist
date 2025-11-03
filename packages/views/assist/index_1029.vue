@@ -550,6 +550,15 @@
   const audioDataArray: any = ref([]);
   const transLanguages: any = ref([]);
   const isTransWssOpen: any = ref(false);
+  
+  // WebSocket 重连相关状态
+  const transWssReconnectAttempts = ref(0); // 当前重连尝试次数
+  const transWssMaxReconnectAttempts = ref(5); // 最大重连次数
+  const transWssReconnectDelay = ref(1000); // 初始重连延迟时间(ms)
+  const transWssMaxReconnectDelay = ref(30000); // 最大重连延迟时间(ms)
+  const transWssReconnectTimer: any = ref(null); // 重连定时器
+  const transWssIsReconnecting = ref(false); // 是否正在重连中
+  const transWssManualClose = ref(false); // 是否手动关闭连接
 
   const sceneMenuRef: any = ref();
   const selfMenuRef: any = ref();
@@ -614,7 +623,7 @@
 
   const mapperLanguage = computed(() => {
     const result = meetingStore.languageList.reduce((acc, item) => {
-      acc[item.label] = item.local || item.value;
+      acc[item.label] = item.value || item.local;
       return acc;
     }, {});
     const languageType = ThMeetingStore.roomTranslateInfo?.languageType;
@@ -908,27 +917,18 @@
   };
 
   // 发送run-task指令
-  function sendRunTask() {
-    const TASK_ID = uuidv4().replace(/-/g, '').slice(0, 32);
+function sendRunTask(dataObj?: any) {
     const runTaskMessage = {
-      header: {
-        action: 'run-task',
-        task_id: TASK_ID,
-        streaming: 'duplex',
-      },
-      payload: {
-        task_group: 'audio',
-        task: 'asr',
-        function: 'recognition',
-        model: 'gummy-realtime-v1',
-        parameters: {
-          sample_rate: 16000,
-          format: 'wav',
-          transcription_enabled: true,
-          translation_enabled: true,
-          translation_target_languages: ['zh'],
+      event_id: dataObj.event_id,
+      type: 'session.update',
+      session: {
+        modalities: ['text'],
+        voice: 'Cherry',
+        input_audio_format: 'pcm16',
+        output_audio_format: 'pcm16',
+        translation: {
+          language: 'zh',
         },
-        input: {},
       },
     };
     transWss.value.send(JSON.stringify(runTaskMessage));
@@ -936,39 +936,59 @@
   const handleTransWssOpen = () => {
     console.log('trans-wss-open');
     isTransWssOpen.value = true;
+    // 连接成功时重置重连状态
+    handleResetTransWssReconnect();
   };
-  function sendAudioStream() {
-    handleTransInterval();
+  function sendAudioStream(dataOb:any) {
+    // eslint-disable-next-line no-use-before-define
+    handleTransInterval(dataOb);
   }
   // 翻译socket 事件
   const handleTransWssMessage = (message: any) => {
     if (message.data) {
       const dataObj: any = JSON.parse(message.data);
-      console.log(
-        '>>>>>>>>>>>>>>>>>tarnslate data',
-        dataObj,
-        transWssInfo.value.translateVendor
-      );
       // 阿里云走新的逻辑
       if (transWssInfo.value.translateVendor === 'aliyun') {
-        const { type } = dataObj;
-        const { text } = dataObj;
-        if (type === 'intermediate' || type === 'final') {
-          ThImEvent.assistMeetingRealTimeMessage({
-            /** 会议号 */
-            meetingNo: ThMeetingStore.meetingInfo.meetingNo,
-            /** 翻译消息 */
-            message: text,
-            /** 消息发送时间 */
-            timestamp: Date.now(),
-            /** 翻译消息的语言 */
-            messageLanguage: 'cn',
-          });
-        }
+        switch (dataObj.type) {
+          case 'session.created':
+            sendRunTask(dataObj);
+            break;
+          case 'session.updated':
+            sendAudioStream(dataObj);
+            break;
+          case 'response.text.done':
+            // console.log('>>>>>>>>>>>>>>>>> response.text.done', dataObj);
+                 ThImEvent.assistMeetingRealTimeMessage({
+                    /** 会议号 */
+                    meetingNo: ThMeetingStore.meetingInfo.meetingNo,
+                    /** 翻译消息 */
+                    message: dataObj.text,
+                    /** 消息发送时间 */
+                    timestamp: Date.now(),
+                    /** 翻译消息的语言 */
+                    messageLanguage: 'cn',
+                  });
+            break;
+            case 'response.text.text':
+              // console.log('>>>>>>>>>>>>>>>>> response.text.done', dataObj);
+                  ThImEvent.assistMeetingRealTimeMessage({
+                      /** 会议号 */
+                      meetingNo: ThMeetingStore.meetingInfo.meetingNo,
+                      /** 翻译消息 */
+                      message: dataObj.text,
+                      /** 消息发送时间 */
+                      timestamp: Date.now(),
+                      /** 翻译消息的语言 */
+                      messageLanguage: 'cn',
+                    });
+              break;
+          default:
+            break;
+        } 
         // switch (dataObj.header.event) {
         //   // 服务端的厂商wss连接成功 发送阿里云任务
-        //   case 'connection-created':
-        //     sendRunTask();
+        //   case 'session.created':
+        //     sendRunTask(dataObj);
         //     break;
         //   case 'task-started':
         //     sendAudioStream();
@@ -1011,12 +1031,12 @@
       // 讯飞走原来的逻辑
       if (transWssInfo.value.translateVendor === 'xunfei') {
         if (dataObj.code === '0') {
-          console.log('翻译socket 事件-dataObj.data', dataObj);
+          // console.log('翻译socket 事件-dataObj.data', dataObj);
           if (dataObj.data) {
             const data: any = JSON.parse(dataObj.data);
             if (data.dst && data.type === 0) {
               const text: any = removeFirstSpecialChar(data.dst);
-              console.log('>>>>>>>>>>>>>>>>> result', data.dst, text);
+              // console.log('>>>>>>>>>>>>>>>>> result', data.dst, text);
               if (text) {
                 // ThImEvent.sendAssistMeetingRealTimeTranslation({
                 //   meetingNo: ThMeetingStore.meetingInfo.meetingNo,
@@ -1043,9 +1063,69 @@
       }
     }
   };
+  /**
+   * WebSocket 重连逻辑
+   */
+  const handleTransWssReconnect = () => {
+    if (transWssManualClose.value || transWssIsReconnecting.value) {
+      return;
+    }
+
+    if (transWssReconnectAttempts.value >= transWssMaxReconnectAttempts.value) {
+      console.error('WebSocket 重连次数已达上限，停止重连');
+      return;
+    }
+
+    transWssIsReconnecting.value = true;
+    transWssReconnectAttempts.value++;
+
+    // 计算重连延迟时间（指数退避算法）
+    const delay = Math.min(
+      transWssReconnectDelay.value * Math.pow(2, transWssReconnectAttempts.value - 1),
+      transWssMaxReconnectDelay.value
+    );
+
+    console.log(`WebSocket 将在 ${delay}ms 后进行第 ${transWssReconnectAttempts.value} 次重连`);
+
+    transWssReconnectTimer.value = setTimeout(() => {
+      transWssIsReconnecting.value = false;
+      handleInitTransLanguage();
+    }, delay);
+  };
+
+  /**
+   * 重置重连状态
+   */
+  const handleResetTransWssReconnect = () => {
+    transWssReconnectAttempts.value = 0;
+    transWssIsReconnecting.value = false;
+    transWssManualClose.value = false;
+    if (transWssReconnectTimer.value) {
+      clearTimeout(transWssReconnectTimer.value);
+      transWssReconnectTimer.value = null;
+    }
+  };
+
+  /**
+   * 停止重连
+   */
+  const handleStopTransWssReconnect = () => {
+    transWssManualClose.value = true;
+    transWssIsReconnecting.value = false;
+    if (transWssReconnectTimer.value) {
+      clearTimeout(transWssReconnectTimer.value);
+      transWssReconnectTimer.value = null;
+    }
+  };
+
   const handleTransWssClose = (err: any) => {
     console.log('handleTransWssClose', err);
     isTransWssOpen.value = false;
+    
+    // 如果不是手动关闭，则尝试重连
+    if (!transWssManualClose.value) {
+      handleTransWssReconnect();
+    }
   };
   const handleMonitorTransWssRtc = () => {
     transWss.value?.addEventListener('open', handleTransWssOpen);
@@ -1060,14 +1140,22 @@
   /**
    * todo 创建声明wss周期 ，获取声网音频数据后发送给服务商
    */
-  const handleTransInterval = () => {
+const handleTransInterval = (dataOb: any) => {
+    // const { event_id: eventId } = dataOb;
     transWssInterval.value = setInterval(() => {
       if (isTransWssOpen.value && transWss.value?.readyState === 1) {
-        const chunkSize =
-          transWssInfo.value.translateVendor === 'aliyun' ? 960 : 1280; // 40ms数据块
-        const audioData: any = audioDataArray.value.splice(0, chunkSize);
-        if (audioData.length > 0) {
-          transWss.value?.send(new Int8Array(audioData));
+        // Get the Base64 audio data
+        const audioData = audioDataArray.value;
+        if (audioData && audioData.length > 0) {
+          // Send in the specified JSON format
+          // const message = {
+          //   event_id: eventId,
+          //   type: 'input_audio_buffer.append',
+          //   audio: audioData,
+          // };
+          transWss.value?.send(audioData);
+          // Clear the audio data after sending
+          audioDataArray.value = '';
         }
       }
     }, 40);
@@ -1080,19 +1168,26 @@
       const currentChannelData = buffer.getChannelData(0);
       const bufTo16kHz = to16kHz(currentChannelData);
       const bufTo16BitPCM = to16BitPCM(bufTo16kHz);
+
+      // Convert audio data to Base64
+      // const audioBuffer = new Uint8Array(bufTo16BitPCM);
+      // const base64Audio = btoa(String.fromCharCode(...audioBuffer));
+
+      // console.log('>>>>>>>>>>>>>>>>> audioDataArray', bufTo16BitPCM);
+      // console.log('>>>>>>>>>>>>>>>>> base64Audio', base64Audio);
+      // audioDataArray.value = base64Audio;
       audioDataArray.value = bufTo16BitPCM;
     }, 2048);
     await sleep(1000 * 1);
     // todo 讯飞才走直接发语音流，阿里云翻译应该在自定义socket发起语音流
-    if (
-      transWssInfo.value.translateVendor === 'xunfei' ||
-      transWssInfo.value.translateVendor === 'aliyun'
-    ) {
+    if (transWssInfo.value.translateVendor === 'xunfei' || transWssInfo.value.translateVendor === 'aliyun') {
       handleTransInterval();
     }
   };
   const handleMstRtcAgoraAudioTrackClose = async () => {
     console.log('翻译转换关闭');
+    // 停止重连机制
+    handleStopTransWssReconnect();
     handleClearTransWssMonitor();
     transWss.value?.close();
     transWss.value = null;
@@ -1107,9 +1202,17 @@
       // transWssInfo.value.escaping === '1' &&
       transWssInfo.value.url
     ) {
-      transWss.value = new WebSocket(transWssInfo.value.url);
-      handleMonitorTransWssRtc();
-      handleStartAudioFrameCallback();
+      try {
+        transWss.value = new WebSocket(transWssInfo.value.url);
+        handleMonitorTransWssRtc();
+        handleStartAudioFrameCallback();
+      } catch (error) {
+        console.error('WebSocket 连接失败:', error);
+        // 连接失败时也尝试重连
+        if (!transWssManualClose.value) {
+          handleTransWssReconnect();
+        }
+      }
     } else {
       handleMstRtcAgoraAudioTrackClose();
     }
@@ -3864,12 +3967,12 @@
   };
   // 渲染翻译文本
   const handleRenderTransLanguages = async (data: any) => {
-    console.log(
-      '渲染翻译文本----data & meetingInfo',
-      data,
-      ThImEvent.meetingInfo,
-      ThMeetingStore.mineInfo
-    );
+    // console.log(
+    //   '渲染翻译文本----data & meetingInfo',
+    //   data,
+    //   ThImEvent.meetingInfo,
+    //   ThMeetingStore.mineInfo
+    // );
     if (data.meetingNo === ThImEvent.meetingInfo.meetingNo) {
       // 翻译非自己的信息
       if (data.sender !== ThMeetingStore.mineInfo.userId) {
@@ -4270,6 +4373,8 @@
     handleClearMonitorNodeEvent();
     handleClearMonitorThRtcClientEvent();
     handleMstRtcAgoraAudioTrackClose();
+    // 清理重连定时器
+    handleStopTransWssReconnect();
     transWssInfo.value = {
       url: '',
       translateVendor: '',
