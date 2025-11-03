@@ -2208,7 +2208,7 @@
   };
 
   // 初始化Canvas
-  const handleInitCanvas = () => {
+  const handleInitCanvas = (preserveImages = false) => {
     console.log('handleInitCanvas', boardCanvasMainRef.value);
     if (!boardCanvasRef.value) {
       console.log('boardCanvasRef-不存在', boardCanvasRef.value);
@@ -2236,17 +2236,109 @@
     }
     // 清空并重新绘制画布内容
     boardCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-    boardCanvasImages.value = [];
+    // 只有在不需要保留图片时才清空图片缓存
+    if (!preserveImages) {
+      boardCanvasImages.value = [];
+    }
     handleDrawAllUserSet();
   };
+  // 提取URL路径（去除协议、域名/IP，只保留路径部分）
+  const getUrlPath = (url: string): string => {
+    if (!url) return '';
+    try {
+      // 如果是绝对URL（包含协议），提取路径部分
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        const urlObj = new URL(url);
+        // 返回路径和查询参数部分
+        return urlObj.pathname + urlObj.search;
+      }
+      // 如果是相对路径，直接返回
+      return url;
+    } catch (error) {
+      // 如果URL解析失败，尝试简单提取路径
+      const match = url.match(/(\/[^?#]*)/);
+      return match ? match[1] : url;
+    }
+  };
+
   // 初始化画板Canvas底图
   const handleRenderBoardBgImgCanvas = (type?: string) => {
     if (boardCtx) {
+      const { baseMap } = ThMeetingStore.boardStatus;
+
+      // 检查是否有缓存的图片且图片源未变化（比较路径部分，忽略IP地址）
+      const cachedImage = boardCanvasImages.value[0];
+      if (
+        cachedImage &&
+        cachedImage.img &&
+        getUrlPath(cachedImage.img.src) === getUrlPath(baseMap) &&
+        cachedImage.img.complete
+      ) {
+        // 使用缓存的图片，直接重新绘制
+        const { img } = cachedImage;
+        if (type === 'shotScreen') {
+          boardCtx.clearRect(
+            0,
+            0,
+            boardCanvasRef.value.width,
+            boardCanvasRef.value.height
+          );
+          boardCtx.drawImage(
+            img,
+            0,
+            0,
+            boardCanvasRef.value.width,
+            boardCanvasRef.value.height
+          );
+          // 更新缓存的尺寸信息
+          boardCanvasImages.value[0] = {
+            img,
+            offsetX: 0,
+            offsetY: 0,
+            drawWidth: boardCanvasRef.value.width,
+            drawHeight: boardCanvasRef.value.height,
+          };
+        } else {
+          const canvasWidth = boardCanvasRef.value.width;
+          const canvasHeight = boardCanvasRef.value.height;
+          const imgWidth = img.width;
+          const imgHeight = img.height;
+
+          let drawWidth = imgWidth;
+          let drawHeight = imgHeight;
+          let offsetX = 0;
+          let offsetY = 0;
+          const widthRatio = canvasWidth / imgWidth;
+          const heightRatio = canvasHeight / imgHeight;
+          const ratio = Math.min(widthRatio, heightRatio);
+
+          drawWidth = imgWidth * ratio;
+          drawHeight = imgHeight * ratio;
+          // 计算居中偏移量
+          offsetX = (canvasWidth - drawWidth) / 2;
+          offsetY = (canvasHeight - drawHeight) / 2;
+          // 清除画布，绘制图片
+          boardCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+          boardCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+          // 更新缓存的尺寸信息
+          boardCanvasImages.value[0] = {
+            img,
+            offsetX,
+            offsetY,
+            drawWidth,
+            drawHeight,
+          };
+        }
+        handleDrawAllUserSet();
+        return;
+      }
+
+      // 图片未缓存或图片源变化，需要重新加载
       boardCanvasImages.value = [];
       const img = new Image();
       img.crossOrigin = 'anonymous';
 
-      img.src = ThMeetingStore.boardStatus.baseMap; // 替换成你的图片路径
+      img.src = baseMap; // 替换成你的图片路径
       console.log('img.src', img.src);
       img.onload = async () => {
         if (type === 'shotScreen') {
@@ -3696,10 +3788,10 @@
       }
     }
     if (ThMeetingStore.scene === 2) {
-      handleInitCanvas();
+      handleInitCanvas(true); // 保留图片缓存
       handleRenderBoardBgImgCanvas('shotScreen');
     } else if (ThMeetingStore.scene === 1) {
-      handleInitCanvas();
+      handleInitCanvas(true); // 保留图片缓存
       if (ThMeetingStore.boardStatus.baseMap) {
         handleRenderBoardBgImgCanvas();
       }
@@ -3722,10 +3814,10 @@
     ThMeetingStore.updateBoardStatusScale(toNumber(data.scale));
 
     if (ThMeetingStore.scene === 2) {
-      handleInitCanvas();
+      handleInitCanvas(true); // 保留图片缓存
       handleRenderBoardBgImgCanvas('shotScreen');
     } else if (ThMeetingStore.scene === 1) {
-      handleInitCanvas();
+      handleInitCanvas(true); // 保留图片缓存
       if (ThMeetingStore.boardStatus.baseMap) {
         handleRenderBoardBgImgCanvas();
       }
