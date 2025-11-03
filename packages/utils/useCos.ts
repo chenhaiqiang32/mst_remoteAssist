@@ -16,6 +16,29 @@ interface UploadResult {
 }
 
 export function useCos() {
+  // 处理存储地址：本地环境需要走代理，线上环境直接使用原地址
+  const processStorageUrl = (url: string): string => {
+    const storageIndex = url.indexOf('/api/storage/');
+
+    if (storageIndex !== -1) {
+      // 判断是否为本地环境
+      const isLocal =
+        process.env.NODE_ENV === 'development' ||
+        window.location.hostname === 'localhost';
+
+      if (isLocal) {
+        // 本地环境：提取 /api/storage/ 之后的路径，拼接 /api 前缀走代理
+        const processedUrl = `${url.substring(storageIndex)}`;
+        return processedUrl;
+      }
+      // 线上环境：直接使用原地址，不需要代理
+      console.log('线上环境 - 使用原始地址:', url);
+      return url;
+    }
+
+    return url;
+  };
+
   // 获取上传URL
   const getUploadUrl = async (fileName: string): Promise<UploadUrlResponse> => {
     try {
@@ -99,8 +122,11 @@ export function useCos() {
           reject(new Error('上传超时'));
         });
 
+        // 处理 uploadUrl：本地环境需要走代理，线上环境直接使用原地址
+        const processedUrl = processStorageUrl(uploadInfo.uploadUrl);
+
         // 发起PUT请求
-        xhr.open('PUT', uploadInfo.uploadUrl, true);
+        xhr.open('PUT', processedUrl, true);
         xhr.setRequestHeader(
           'Content-Type',
           file.type || 'application/octet-stream'
@@ -111,11 +137,14 @@ export function useCos() {
       const status = await uploadPromise;
 
       if (status === 200 || status === 204) {
+        // 处理 previewUrl：本地环境需要走代理，线上环境直接使用原地址
+        const processedPreviewUrl = processStorageUrl(uploadInfo.previewUrl);
+
         return {
           objectKey: uploadInfo.objectKey,
-          previewUrl: uploadInfo.previewUrl,
+          previewUrl: processedPreviewUrl,
           statusCode: 200,
-          Location: uploadInfo.previewUrl, // 保持兼容性
+          Location: processedPreviewUrl, // 保持兼容性
         };
       }
       throw new Error('文件上传失败');
