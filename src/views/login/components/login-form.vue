@@ -8,7 +8,7 @@
       layout="vertical"
       @submit="handleSubmit"
     >
-      <a-form-item
+      <!-- <a-form-item
         field="companyNo"
         :rules="[
           { required: true, message: $t('login.form.userCompany.errMsg') },
@@ -22,7 +22,7 @@
           :placeholder="$t('login.form.userCompany.placeholder')"
         >
         </a-input>
-      </a-form-item>
+      </a-form-item> -->
       <a-form-item
         field="username"
         :rules="[{ required: true, message: $t('login.form.userName.errMsg') }]"
@@ -109,7 +109,7 @@
   const { loading, setLoading } = useLoading();
   const userStore = useUserStore();
   const loginConfig: any = useStorage('login-config', {
-    companyNo: '',
+    companyNo: 'EU0001',
     username: '',
     password: '',
     agreeProtocol: true,

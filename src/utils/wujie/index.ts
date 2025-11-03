@@ -24,11 +24,14 @@ export const wujieCopyToClipboard = (text: string) => {
 };
 
 export function getSocketHost() {
-  const isLocal =
+  if (
     window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.includes('192.168.1.102') ||
-    window.location.hostname.includes('192.168.1.88');
-
-  return isLocal ? '192.168.1.88:9010' : window.location.host;
+    window.location.hostname.includes('192.168.1.102')
+  ) {
+    return '63.178.128.115:9012';
+  }
+  if (window.location.hostname.includes('192.168.1.88')) {
+    return '192.168.1.88:9010';
+  }
+  return window.location.host;
 }
