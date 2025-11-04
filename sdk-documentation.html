@@ -784,6 +784,41 @@ chatDB.clearAll();
             </div>
             <div class="section-content">
                 <div class="demo-section">
+                    <h3>SDK配置</h3>
+                    <p>请在下方输入SDK配置信息（在实际项目中，这些配置通常从环境变量或配置文件中读取）：</p>
+                    
+                    <div style="margin: 20px 0;">
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">聊天WebSocket地址 (wssUrl):</label>
+                        <input type="text" id="chatWssUrl" value="wss://63.178.128.115:9012/chat-socket" placeholder="wss://63.178.128.115:9012/chat-socket" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">会议WebSocket地址 (meetingWssUrl):</label>
+                        <input type="text" id="meetingWssUrl" value="wss://63.178.128.115:9012/socket" placeholder="wss://63.178.128.115:9012/socket" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">API主机地址 (hostUrl):</label>
+                        <input type="text" id="hostUrl" value="https://63.178.128.115:9012" placeholder="https://63.178.128.115:9012" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">用户ID (userId):</label>
+                        <input type="number" id="userId" placeholder="请输入用户ID" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">认证Token (token):</label>
+                        <input type="text" id="token" placeholder="请输入认证Token" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">Agora App ID (agoraAppId):</label>
+                        <input type="text" id="agoraAppId" placeholder="请输入Agora App ID" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <label style="display: block; margin: 10px 0; font-weight: 500;">Agora Token (agoraToken):</label>
+                        <input type="text" id="agoraToken" placeholder="请输入Agora Token" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-left: 4px solid #667eea; border-radius: 4px;">
+                            <p style="margin: 0; font-size: 13px; color: #495057;">
+                                <strong>提示：</strong>WebSocket和API地址已设置为项目默认值。如果您的环境不同，请根据实际情况修改：
+                                <br>• 本地开发环境（localhost/192.168.1.102）：63.178.128.115:9012
+                                <br>• 内网环境（192.168.1.88）：192.168.1.88:9010
+                                <br>• 生产环境：使用当前域名
+                            </p>
+                        </div>
+                    </div>
+                    
                     <h3>SDK功能演示</h3>
                     <p>点击下方按钮体验SDK的各项功能：</p>
                     
@@ -791,12 +826,13 @@ chatDB.clearAll();
                     <button class="demo-button" onclick="initMeetingSDK()">初始化会议SDK</button>
                     <button class="demo-button" onclick="initRTCSDK()">初始化音视频SDK</button>
                     <button class="demo-button" onclick="initStorageSDK()">初始化存储SDK</button>
+                    <button class="demo-button" onclick="clearLog()" style="background: #e53e3e;">清空日志</button>
                     
                     <div id="demo-status" class="status disconnected">未连接</div>
                     
                     <h4>演示日志：</h4>
-                    <div id="demo-log" style="background: #f8f9fa; padding: 15px; border-radius: 5px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;">
-                        <div>等待初始化...</div>
+                    <div id="demo-log" style="background: #f8f9fa; padding: 15px; border-radius: 5px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.6;">
+                        <div style="color: #999;">等待初始化...（请先配置SDK参数）</div>
                     </div>
                 </div>
             </div>
@@ -935,53 +971,587 @@ AssistErrorType = {
         </div>
     </div>
 
-    <script>
-        // 演示功能
-        let demoLog = document.getElementById('demo-log');
-        let demoStatus = document.getElementById('demo-status');
-        
-        function addLog(message) {
+    <script type="module">
+        // SDK演示管理器
+        class SDKDemoManager {
+            constructor() {
+                this.chatIM = null;
+                this.thIM = null;
+                this.thRTC = null;
+                this.chatDB = null;
+                this.EventListener = null;
+                this.THEventBus = null;
+                this.sdksLoaded = false;
+                this.init();
+            }
+
+            async init() {
+                // 等待DOM加载完成
+                if (document.readyState === 'loading') {
+                    await new Promise(resolve => {
+                        document.addEventListener('DOMContentLoaded', resolve);
+                    });
+                }
+                
+                this.demoLog = document.getElementById('demo-log');
+                this.demoStatus = document.getElementById('demo-status');
+                
+                // 尝试加载SDK模块
+                await this.loadSDKs();
+            }
+
+            async loadSDKs() {
+                try {
+                    // 尝试动态导入SDK（如果SDK已编译并可用）
+                    // 注意：在实际项目中，这些模块需要通过打包工具（如Vite）处理
+                    if (this.demoLog) {
+                        addLog('正在加载SDK模块...', 'info');
+                    }
+                    
+                    // 检查是否在开发环境中（通过检查全局变量或路径）
+                    if (typeof window !== 'undefined' && window.__SDK_AVAILABLE__) {
+                        // 如果SDK已通过其他方式加载，使用全局变量
+                        this.chatIM = window.ChatIM;
+                        this.thIM = window.ThIM;
+                        this.thRTC = window.ThRTC;
+                        this.chatDB = window.useChatIndexedDB;
+                        this.EventListener = window.EventListener;
+                        this.THEventBus = window.THEventBus;
+                        this.sdksLoaded = true;
+                        addLog('✓ SDK模块已加载', 'success');
+                        return;
+                    }
+                    
+                    // 尝试从相对路径导入（如果使用ES模块）
+                    try {
+                        const chatModule = await import('./src/utils/sdk/message_ws.ts');
+                        const imModule = await import('./packages/utils/sdk/im.ts');
+                        const rtcModule = await import('./packages/utils/sdk/rtc.ts');
+                        const dbModule = await import('./src/utils/sdk/chatDB.ts');
+                        const eventModule = await import('./src/utils/event-listener.ts');
+                        const eventBusModule = await import('./packages/services/THEventBus.ts');
+                        
+                        this.chatIM = chatModule.default;
+                        this.thIM = imModule.default;
+                        this.thRTC = rtcModule.default;
+                        this.chatDB = dbModule.useChatIndexedDB;
+                        this.EventListener = eventModule.default;
+                        this.THEventBus = eventBusModule.default;
+                        this.sdksLoaded = true;
+                        addLog('✓ SDK模块已加载', 'success');
+                    } catch (importError) {
+                        addLog('⚠ 无法直接导入SDK模块（TypeScript文件需要编译）', 'warning');
+                        addLog('💡 提示：在实际项目中，请使用打包工具（如Vite）编译后使用', 'info');
+                        addLog('💡 或者通过构建后的bundle文件加载SDK', 'info');
+                        this.sdksLoaded = false;
+                    }
+                } catch (error) {
+                    addLog(`⚠ SDK加载失败: ${error.message}`, 'warning');
+                    addLog('💡 这是正常的，因为SDK是TypeScript文件，需要先编译', 'info');
+                    addLog('💡 在实际项目中使用时，请通过构建工具编译后使用', 'info');
+                    this.sdksLoaded = false;
+                }
+            }
+
+            getConfig() {
+                return {
+                    chatWssUrl: document.getElementById('chatWssUrl').value.trim(),
+                    meetingWssUrl: document.getElementById('meetingWssUrl').value.trim(),
+                    hostUrl: document.getElementById('hostUrl').value.trim(),
+                    userId: parseInt(document.getElementById('userId').value) || 0,
+                    token: document.getElementById('token').value.trim(),
+                    agoraAppId: document.getElementById('agoraAppId').value.trim(),
+                    agoraToken: document.getElementById('agoraToken').value.trim()
+                };
+            }
+
+            validateConfig(config, requiredFields) {
+                const missing = [];
+                requiredFields.forEach(field => {
+                    if (!config[field] || config[field] === '') {
+                        missing.push(field);
+                    }
+                });
+                return { valid: missing.length === 0, missing };
+            }
+
+            async initChatSDK() {
+                try {
+                    addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                    addLog('🚀 开始初始化聊天SDK (ChatIM)...', 'info');
+                    
+                    const config = this.getConfig();
+                    const validation = this.validateConfig(config, ['chatWssUrl', 'userId', 'token']);
+                    
+                    if (!validation.valid) {
+                        addLog(`❌ 配置不完整，缺少: ${validation.missing.join(', ')}`, 'error');
+                        return;
+                    }
+                    
+                    addLog(`配置信息: wssUrl=${config.chatWssUrl}, userId=${config.userId}`, 'info');
+                    
+                    if (!this.sdksLoaded) {
+                        addLog('⚠ SDK模块未加载，使用模拟演示', 'warning');
+                        await this.simulateChatSDK(config);
+                        return;
+                    }
+                    
+                    // 实际初始化SDK
+                    this.chatIM = new this.chatIM({
+                        wssUrl: config.chatWssUrl,
+                        userId: config.userId,
+                        token: config.token
+                    });
+                    
+                    // 设置事件监听
+                    this.setupChatEventListeners();
+                    
+                    // 初始化WebSocket连接
+                    this.chatIM.initChatWss();
+                    addLog('✓ WebSocket连接已初始化', 'success');
+                    
+                    // 执行登录
+                    setTimeout(() => {
+                        this.chatIM.login();
+                        addLog('✓ 登录请求已发送', 'success');
+                    }, 500);
+                    
+                    updateStatus('connected', '聊天SDK已连接');
+                    
+                } catch (error) {
+                    addLog(`❌ 初始化失败: ${error.message}`, 'error');
+                    addLog(`错误详情: ${error.stack}`, 'error');
+                    updateStatus('error', '初始化失败');
+                }
+            }
+
+            setupChatEventListeners() {
+                if (!this.EventListener) return;
+                
+                this.EventListener.on('ChatWsOpen', () => {
+                    addLog('✓ WebSocket连接已打开', 'success');
+                });
+                
+                this.EventListener.on('ChatLoginSuccess', (data) => {
+                    addLog('✓ 登录成功', 'success');
+                    addLog(`用户信息: ${JSON.stringify(data)}`, 'info');
+                });
+                
+                this.EventListener.on('ChatMessageReceive', (message) => {
+                    addLog(`📨 收到消息: ${JSON.stringify(message)}`, 'info');
+                });
+                
+                this.EventListener.on('ChatMessageStatus', (status) => {
+                    addLog(`📊 消息状态更新: ${JSON.stringify(status)}`, 'info');
+                });
+                
+                this.EventListener.on('ChatWsClose', () => {
+                    addLog('⚠ WebSocket连接已关闭', 'warning');
+                });
+                
+                this.EventListener.on('ChatWsError', (error) => {
+                    addLog(`❌ WebSocket错误: ${error}`, 'error');
+                });
+            }
+
+            async simulateChatSDK(config) {
+                addLog('💡 模拟模式：展示SDK调用流程', 'info');
+                addLog('1. 创建ChatIM实例...', 'info');
+                await delay(300);
+                addLog('✓ ChatIM实例已创建', 'success');
+                
+                addLog('2. 初始化WebSocket连接...', 'info');
+                await delay(500);
+                addLog('✓ WebSocket连接已建立', 'success');
+                
+                addLog('3. 发送登录请求...', 'info');
+                await delay(300);
+                addLog('✓ 登录请求已发送', 'success');
+                
+                await delay(500);
+                addLog('✓ 登录成功', 'success');
+                addLog(`用户ID: ${config.userId}`, 'info');
+                
+                updateStatus('connected', '聊天SDK已连接（模拟）');
+            }
+
+            async initMeetingSDK() {
+                try {
+                    addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                    addLog('🚀 开始初始化会议SDK (ThIM)...', 'info');
+                    
+                    const config = this.getConfig();
+                    const validation = this.validateConfig(config, ['meetingWssUrl', 'userId', 'token', 'hostUrl']);
+                    
+                    if (!validation.valid) {
+                        addLog(`❌ 配置不完整，缺少: ${validation.missing.join(', ')}`, 'error');
+                        return;
+                    }
+                    
+                    addLog(`配置信息: wssUrl=${config.meetingWssUrl}, hostUrl=${config.hostUrl}`, 'info');
+                    
+                    if (!this.sdksLoaded) {
+                        addLog('⚠ SDK模块未加载，使用模拟演示', 'warning');
+                        await this.simulateMeetingSDK(config);
+                        return;
+                    }
+                    
+                    // 实际初始化SDK
+                    this.thIM = new this.thIM({
+                        wssUrl: config.meetingWssUrl,
+                        userId: config.userId,
+                        token: config.token,
+                        hostUrl: config.hostUrl
+                    });
+                    
+                    // 设置事件监听
+                    this.setupMeetingEventListeners();
+                    
+                    // 初始化WebSocket连接
+                    this.thIM.initWss();
+                    addLog('✓ WebSocket连接已初始化', 'success');
+                    
+                    // 执行登录
+                    setTimeout(() => {
+                        this.thIM.login();
+                        addLog('✓ 登录请求已发送', 'success');
+                    }, 500);
+                    
+                    updateStatus('connected', '会议SDK已连接');
+                    
+                } catch (error) {
+                    addLog(`❌ 初始化失败: ${error.message}`, 'error');
+                    updateStatus('error', '初始化失败');
+                }
+            }
+
+            setupMeetingEventListeners() {
+                if (!this.THEventBus) return;
+                
+                this.THEventBus.on('ThAssistImWsOpen', () => {
+                    addLog('✓ 会议WebSocket连接已打开', 'success');
+                });
+                
+                this.THEventBus.on('ThAssistLoginSuccess', (data) => {
+                    addLog('✓ 会议登录成功', 'success');
+                    addLog(`登录信息: ${JSON.stringify(data)}`, 'info');
+                });
+                
+                this.THEventBus.on('ThAssistInvited', (data) => {
+                    addLog(`📨 收到会议邀请: ${JSON.stringify(data)}`, 'info');
+                });
+                
+                this.THEventBus.on('th-assist-canvas-drawing', (data) => {
+                    addLog(`🎨 画板绘制事件: ${JSON.stringify(data)}`, 'info');
+                });
+            }
+
+            async simulateMeetingSDK(config) {
+                addLog('💡 模拟模式：展示SDK调用流程', 'info');
+                addLog('1. 创建ThIM实例...', 'info');
+                await delay(300);
+                addLog('✓ ThIM实例已创建', 'success');
+                
+                addLog('2. 初始化WebSocket连接...', 'info');
+                await delay(500);
+                addLog('✓ WebSocket连接已建立', 'success');
+                
+                addLog('3. 发送登录请求...', 'info');
+                await delay(300);
+                addLog('✓ 登录请求已发送', 'success');
+                
+                await delay(500);
+                addLog('✓ 登录成功', 'success');
+                addLog('✓ 会议功能已就绪', 'success');
+                
+                updateStatus('connected', '会议SDK已连接（模拟）');
+            }
+
+            async initRTCSDK() {
+                try {
+                    addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                    addLog('🚀 开始初始化音视频SDK (ThRTC)...', 'info');
+                    
+                    const config = this.getConfig();
+                    const validation = this.validateConfig(config, ['agoraAppId', 'agoraToken', 'userId']);
+                    
+                    if (!validation.valid) {
+                        addLog(`❌ 配置不完整，缺少: ${validation.missing.join(', ')}`, 'error');
+                        return;
+                    }
+                    
+                    addLog(`配置信息: appId=${config.agoraAppId}, channel=demo-room`, 'info');
+                    
+                    if (!this.sdksLoaded) {
+                        addLog('⚠ SDK模块未加载，使用模拟演示', 'warning');
+                        await this.simulateRTCSDK(config);
+                        return;
+                    }
+                    
+                    // 实际初始化SDK
+                    this.thRTC = new this.thRTC({
+                        appId: config.agoraAppId,
+                        channel: 'demo-room',
+                        token: config.agoraToken,
+                        uid: config.userId
+                    });
+                    
+                    // 设置事件监听
+                    this.setupRTCEventListeners();
+                    
+                    addLog('✓ ThRTC实例已创建', 'success');
+                    
+                    // 尝试加入房间（需要用户授权）
+                    try {
+                        await this.thRTC.joinRtcRoom();
+                        addLog('✓ 已加入RTC房间', 'success');
+                    } catch (error) {
+                        addLog(`⚠ 加入房间失败: ${error.message}`, 'warning');
+                        addLog('💡 提示：需要用户授权摄像头和麦克风权限', 'info');
+                    }
+                    
+                    updateStatus('connected', '音视频SDK已连接');
+                    
+                } catch (error) {
+                    addLog(`❌ 初始化失败: ${error.message}`, 'error');
+                    updateStatus('error', '初始化失败');
+                }
+            }
+
+            setupRTCEventListeners() {
+                if (!this.THEventBus) return;
+                
+                this.THEventBus.on('mst-agora-user-joined', (user) => {
+                    addLog(`👤 用户加入: ${JSON.stringify(user)}`, 'info');
+                });
+                
+                this.THEventBus.on('mst-agora-user-left', (data) => {
+                    addLog(`👋 用户离开: ${JSON.stringify(data)}`, 'info');
+                });
+            }
+
+            async simulateRTCSDK(config) {
+                addLog('💡 模拟模式：展示SDK调用流程', 'info');
+                addLog('1. 创建ThRTC实例...', 'info');
+                await delay(300);
+                addLog('✓ ThRTC实例已创建', 'success');
+                
+                addLog('2. 初始化Agora RTC客户端...', 'info');
+                await delay(500);
+                addLog('✓ RTC客户端已初始化', 'success');
+                
+                addLog('3. 尝试加入RTC房间...', 'info');
+                await delay(500);
+                addLog('⚠ 需要用户授权摄像头和麦克风权限', 'warning');
+                addLog('✓ RTC连接已建立', 'success');
+                
+                updateStatus('connected', '音视频SDK已连接（模拟）');
+            }
+
+            async initStorageSDK() {
+                try {
+                    addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                    addLog('🚀 开始初始化存储SDK (ChatDB)...', 'info');
+                    
+                    if (!this.sdksLoaded) {
+                        addLog('⚠ SDK模块未加载，使用模拟演示', 'warning');
+                        await this.simulateStorageSDK();
+                        return;
+                    }
+                    
+                    // 实际初始化SDK
+                    const useChatIndexedDB = this.chatDB;
+                    const chatDBInstance = useChatIndexedDB('RemoteAssistDemoDB');
+                    this.chatDBInstance = chatDBInstance;
+                    addLog('✓ ChatDB实例已创建', 'success');
+                    
+                    // 测试添加会话
+                    const conversation = {
+                        conversationId: 'demo_conv_' + Date.now(),
+                        targetId: 12345,
+                        targetName: '演示用户',
+                        targetAvatarUrl: '',
+                        unreadCount: 0,
+                        sendTime: Date.now(),
+                        messageType: 1,
+                        content: 'Hello, World!',
+                        chatType: 1,
+                        status: 1
+                    };
+                    
+                    await chatDBInstance.addConversation(conversation);
+                    addLog('✓ 测试会话已添加', 'success');
+                    
+                    // 获取所有会话
+                    const conversations = await chatDBInstance.getAllConversations();
+                    addLog(`✓ 已获取 ${conversations.length} 个会话`, 'success');
+                    
+                    updateStatus('connected', '存储SDK已连接');
+                    
+                } catch (error) {
+                    addLog(`❌ 初始化失败: ${error.message}`, 'error');
+                    updateStatus('error', '初始化失败');
+                }
+            }
+
+            async simulateStorageSDK() {
+                addLog('💡 模拟模式：展示SDK调用流程', 'info');
+                addLog('1. 创建ChatDB实例...', 'info');
+                await delay(300);
+                addLog('✓ ChatDB实例已创建', 'success');
+                
+                addLog('2. 打开IndexedDB数据库...', 'info');
+                await delay(500);
+                addLog('✓ IndexedDB数据库已打开', 'success');
+                
+                addLog('3. 创建数据表（messages, conversations）...', 'info');
+                await delay(300);
+                addLog('✓ 数据表已创建', 'success');
+                
+                addLog('4. 测试添加会话...', 'info');
+                await delay(300);
+                addLog('✓ 测试会话已添加', 'success');
+                
+                addLog('✓ 本地存储功能已就绪', 'success');
+                updateStatus('connected', '存储SDK已连接（模拟）');
+            }
+        }
+
+        // 全局函数
+        let demoManager = null;
+
+        function addLog(message, type = 'info') {
+            const demoLog = document.getElementById('demo-log');
             const timestamp = new Date().toLocaleTimeString();
-            demoLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            
+            let color = '#333';
+            let prefix = '';
+            if (type === 'success') {
+                color = '#22543d';
+                prefix = '✓';
+            } else if (type === 'error') {
+                color = '#742a2a';
+                prefix = '❌';
+            } else if (type === 'warning') {
+                color = '#744210';
+                prefix = '⚠';
+            } else if (type === 'info') {
+                color = '#2c5282';
+                prefix = 'ℹ';
+            }
+            
+            const logEntry = document.createElement('div');
+            logEntry.style.color = color;
+            logEntry.style.margin = '2px 0';
+            logEntry.innerHTML = `<span style="color: #999;">[${timestamp}]</span> <span style="font-weight: ${type === 'error' || type === 'success' ? 'bold' : 'normal'}">${prefix} ${message}</span>`;
+            
+            demoLog.appendChild(logEntry);
             demoLog.scrollTop = demoLog.scrollHeight;
         }
         
         function updateStatus(status, message) {
+            const demoStatus = document.getElementById('demo-status');
             demoStatus.className = `status ${status}`;
             demoStatus.textContent = message;
         }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function clearLog() {
+            const demoLog = document.getElementById('demo-log');
+            demoLog.innerHTML = '<div style="color: #999;">日志已清空</div>';
+        }
         
         function initChatSDK() {
-            addLog('正在初始化聊天SDK...');
-            updateStatus('connected', '聊天SDK已连接');
-            addLog('ChatIM SDK 初始化完成');
-            addLog('WebSocket连接已建立');
-            addLog('用户认证成功');
+            if (!demoManager) {
+                demoManager = new SDKDemoManager();
+                setTimeout(() => demoManager.initChatSDK(), 100);
+            } else {
+                demoManager.initChatSDK();
+            }
         }
         
         function initMeetingSDK() {
-            addLog('正在初始化会议SDK...');
-            updateStatus('connected', '会议SDK已连接');
-            addLog('ThIM SDK 初始化完成');
-            addLog('会议房间已加入');
-            addLog('画板功能已启用');
+            if (!demoManager) {
+                demoManager = new SDKDemoManager();
+                setTimeout(() => demoManager.initMeetingSDK(), 100);
+            } else {
+                demoManager.initMeetingSDK();
+            }
         }
         
         function initRTCSDK() {
-            addLog('正在初始化音视频SDK...');
-            updateStatus('connected', '音视频SDK已连接');
-            addLog('ThRTC SDK 初始化完成');
-            addLog('Agora RTC 连接成功');
-            addLog('音视频流已启动');
+            if (!demoManager) {
+                demoManager = new SDKDemoManager();
+                setTimeout(() => demoManager.initRTCSDK(), 100);
+            } else {
+                demoManager.initRTCSDK();
+            }
         }
         
         function initStorageSDK() {
-            addLog('正在初始化存储SDK...');
-            updateStatus('connected', '存储SDK已连接');
-            addLog('ChatDB SDK 初始化完成');
-            addLog('IndexedDB 数据库已创建');
-            addLog('本地存储已就绪');
+            if (!demoManager) {
+                demoManager = new SDKDemoManager();
+                setTimeout(() => demoManager.initStorageSDK(), 100);
+            } else {
+                demoManager.initStorageSDK();
+            }
         }
+
+        // 将函数暴露到全局作用域，以便HTML中的onclick可以调用
+        window.initChatSDK = initChatSDK;
+        window.initMeetingSDK = initMeetingSDK;
+        window.initRTCSDK = initRTCSDK;
+        window.initStorageSDK = initStorageSDK;
+        window.clearLog = clearLog;
+
+        // 根据环境自动设置默认值
+        function getSocketHost() {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname.includes('192.168.1.102')) {
+                return '63.178.128.115:9012';
+            }
+            if (hostname.includes('192.168.1.88')) {
+                return '192.168.1.88:9010';
+            }
+            return window.location.host;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 根据环境自动设置WebSocket和API地址（如果当前值与默认值相同，则根据环境更新）
+            const socketHost = getSocketHost();
+            const chatWssUrlInput = document.getElementById('chatWssUrl');
+            const meetingWssUrlInput = document.getElementById('meetingWssUrl');
+            const hostUrlInput = document.getElementById('hostUrl');
+            
+            if (chatWssUrlInput) {
+                const expectedUrl = `wss://${socketHost}/chat-socket`;
+                // 如果当前值是默认值或者是空，则根据环境更新
+                if (!chatWssUrlInput.value || 
+                    chatWssUrlInput.value === 'wss://63.178.128.115:9012/chat-socket') {
+                    chatWssUrlInput.value = expectedUrl;
+                }
+            }
+            if (meetingWssUrlInput) {
+                const expectedUrl = `wss://${socketHost}/socket`;
+                if (!meetingWssUrlInput.value || 
+                    meetingWssUrlInput.value === 'wss://63.178.128.115:9012/socket') {
+                    meetingWssUrlInput.value = expectedUrl;
+                }
+            }
+            if (hostUrlInput) {
+                const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+                const expectedUrl = `${protocol}//${socketHost}`;
+                if (!hostUrlInput.value || 
+                    hostUrlInput.value === 'https://63.178.128.115:9012') {
+                    hostUrlInput.value = expectedUrl;
+                }
+            }
+            
+            demoManager = new SDKDemoManager();
         
         // 平滑滚动
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -994,6 +1564,7 @@ AssistErrorType = {
                         block: 'start'
                     });
                 }
+                });
             });
         });
     </script>
