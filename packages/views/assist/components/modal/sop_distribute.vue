@@ -13,6 +13,7 @@
             <span>{{ t('mst.sop.distribute.select.process') }}</span>
           </div>
           <a-select
+            allow-search
             v-model="selectedSop"
             class="sop-distribute-select"
             :placeholder="t('mst.sop.distribute.select.process.placeholder')"
