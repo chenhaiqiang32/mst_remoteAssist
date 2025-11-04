@@ -104,10 +104,24 @@
           <img v-else :src="dragIngIcon" alt="" />
         </div>
         <div class="th-ma-board-m-i" @click="handleBoardCanvasZoom(true)">
-          <img :src="zoomAddIcon" alt="" />
+          <img
+            :src="zoomAddIcon"
+            alt=""
+            :style="{
+              filter: `brightness(${ThMeetingStore.boardStatus.scale === ThMeetingStore.boardMaxScale ? 0.5 : 1})`,
+              cursor: ThMeetingStore.boardStatus.scale === ThMeetingStore.boardMaxScale ? 'not-allowed' : 'pointer'
+            }"
+          />
         </div>
         <div class="th-ma-board-m-i" @click="handleBoardCanvasZoom(false)">
-          <img :src="zoomSubtractIcon" alt="" />
+          <img
+            :src="zoomSubtractIcon"
+            alt=""
+            :style="{
+              filter: `brightness(${ThMeetingStore.boardStatus.scale === ThMeetingStore.boardMinScale ? 0.5 : 1})`,
+              cursor: ThMeetingStore.boardStatus.scale === ThMeetingStore.boardMinScale ? 'not-allowed' : 'pointer'
+            }"
+          />
         </div>
       </div>
       <div

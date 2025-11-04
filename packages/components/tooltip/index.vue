@@ -2,17 +2,20 @@
   <div
     class="tooltip-container"
     @mouseenter="updateTooltipPosition"
+    @mousemove="updateTooltipPosition"
     @mouseleave="showTooltip = false"
   >
     <div class="slot-wrapper">
       <slot></slot>
     </div>
-    <div v-if="showTooltip" :style="tooltipContainerStyle">
-      <div class="tooltip" :class="positionClass" :style="computedTooltipStyle">
-        <div class="tooltip-arrow"></div>
-        {{ content }}
+    <teleport to="body">
+      <div v-if="showTooltip" :style="tooltipContainerStyle">
+        <div class="tooltip" :class="positionClass" :style="computedTooltipStyle">
+          <div class="tooltip-arrow"></div>
+          {{ content }}
+        </div>
       </div>
-    </div>
+    </teleport>
   </div>
 </template>
 
@@ -50,7 +53,7 @@
 
         const style: { [key: string]: string } = {
           position: 'fixed',
-          zIndex: '999',
+          zIndex: '9999',
         };
 
         switch (props.position) {
