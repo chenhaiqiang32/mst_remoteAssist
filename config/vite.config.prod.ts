@@ -17,6 +17,7 @@ export default mergeConfig(
     ],
     build: {
       outDir: 'docs',
+      assetsDir: 'assets',
       rollupOptions: {
         output: {
           manualChunks: {
