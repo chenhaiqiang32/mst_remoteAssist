@@ -135,6 +135,7 @@
       }
       setLoading(true);
       try {
+        values.companyNo = 'EU0001';
         const res: any = await userStore.login(values as LoginData);
         if (res.code !== 200 && res.code !== 401) {
           Message.error(res.msg);
