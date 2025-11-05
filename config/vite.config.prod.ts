@@ -16,6 +16,7 @@ export default mergeConfig(
       configImageminPlugin(),
     ],
     build: {
+      outDir: 'docs',
       rollupOptions: {
         output: {
           manualChunks: {
